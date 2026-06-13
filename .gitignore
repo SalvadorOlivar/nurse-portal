@@ -1,0 +1,29 @@
+# Go
+backend/bin/
+backend/tmp/
+*.exe
+*.test
+*.out
+
+# Node
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+*.env
+
+# Docker volumes
+.pgdata/
