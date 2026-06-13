@@ -17,8 +17,10 @@ import { toast } from 'sonner'
 import type { Employee } from '@/types/employee'
 
 const tipoLabels: Record<string, string> = {
-  NURSE: 'Licenciada/o',
+  SUPERVISOR: 'Supervisor/a',
+  NURSE: 'Licenciada/o en Enfermería',
   NURSE_ASSISTANT: 'Enfermera/o',
+  AUXILIAR_SERVICIO: 'Auxiliar de Servicio',
 }
 
 function EmployeeRow({ employee }: { employee: Employee }) {

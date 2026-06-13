@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func NewRouter(employeeHandler *EmployeeHandler) *chi.Mux {
+func NewRouter(employeeHandler *EmployeeHandler, planificacionHandler *PlanificacionHandler) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -28,6 +28,22 @@ func NewRouter(employeeHandler *EmployeeHandler) *chi.Mux {
 				r.Get("/", employeeHandler.GetByID)
 				r.Put("/", employeeHandler.Update)
 				r.Delete("/", employeeHandler.Deactivate)
+			})
+		})
+
+		r.Route("/planificaciones", func(r chi.Router) {
+			r.Post("/", planificacionHandler.Create)
+			r.Get("/", planificacionHandler.List)
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", planificacionHandler.GetByID)
+				r.Put("/", planificacionHandler.Update)
+				r.Delete("/", planificacionHandler.Delete)
+				r.Post("/publicar", planificacionHandler.Publicar)
+				r.Post("/cerrar", planificacionHandler.Cerrar)
+				r.Post("/generar", planificacionHandler.Generar)
+				r.Post("/turnos", planificacionHandler.CreateTurno)
+				r.Delete("/turnos/{turnoId}", planificacionHandler.DeleteTurno)
+				r.Get("/requirements", planificacionHandler.GetStaffingRequirements)
 			})
 		})
 	})

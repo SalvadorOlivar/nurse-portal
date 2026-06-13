@@ -38,7 +38,7 @@ export default function RootLayout({
                 <Link href="/employees" className="hover:text-primary transition-colors">
                   Empleados
                 </Link>
-                <Link href="/schedules" className="hover:text-primary transition-colors">
+                <Link href="/planificaciones" className="hover:text-primary transition-colors">
                   Planificaciones
                 </Link>
               </nav>

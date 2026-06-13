@@ -12,6 +12,7 @@ type Employee struct {
 	Nombre        string
 	Apellido      string
 	Tipo          Type
+	Sector        string
 	HorasMinimas  int
 	HorasMaximas  int
 	PatronTrabajo WorkPattern
@@ -24,6 +25,7 @@ type NewEmployeeParams struct {
 	Nombre       string
 	Apellido     string
 	Tipo         Type
+	Sector       string
 	HorasMinimas int
 	HorasMaximas int
 	WorkPattern  *WorkPattern
@@ -45,6 +47,12 @@ func NewEmployee(params NewEmployeeParams) (*Employee, error) {
 	if params.HorasMaximas < params.HorasMinimas {
 		return nil, fmt.Errorf("horas maximas must be >= horas minimas")
 	}
+	if (params.Tipo == Nurse || params.Tipo == NurseAssistant) && params.Sector == "" {
+		return nil, fmt.Errorf("sector is required for %s", params.Tipo)
+	}
+	if (params.Tipo == Supervisor || params.Tipo == AuxiliarServicio) && params.Sector != "" {
+		return nil, fmt.Errorf("sector must be empty for %s", params.Tipo)
+	}
 
 	wp := DefaultWorkPattern()
 	if params.WorkPattern != nil {
@@ -57,6 +65,7 @@ func NewEmployee(params NewEmployeeParams) (*Employee, error) {
 		Nombre:        params.Nombre,
 		Apellido:      params.Apellido,
 		Tipo:          params.Tipo,
+		Sector:        params.Sector,
 		HorasMinimas:  params.HorasMinimas,
 		HorasMaximas:  params.HorasMaximas,
 		PatronTrabajo: wp,
@@ -70,6 +79,7 @@ type UpdateEmployeeParams struct {
 	Nombre       string
 	Apellido     string
 	Tipo         Type
+	Sector       string
 	HorasMinimas int
 	HorasMaximas int
 	WorkPattern  *WorkPattern
@@ -92,9 +102,17 @@ func (e *Employee) Update(params UpdateEmployeeParams) error {
 		return fmt.Errorf("horas maximas must be >= horas minimas")
 	}
 
+	if (params.Tipo == Nurse || params.Tipo == NurseAssistant) && params.Sector == "" {
+		return fmt.Errorf("sector is required for %s", params.Tipo)
+	}
+	if (params.Tipo == Supervisor || params.Tipo == AuxiliarServicio) && params.Sector != "" {
+		return fmt.Errorf("sector must be empty for %s", params.Tipo)
+	}
+
 	e.Nombre = params.Nombre
 	e.Apellido = params.Apellido
 	e.Tipo = params.Tipo
+	e.Sector = params.Sector
 	e.HorasMinimas = params.HorasMinimas
 	e.HorasMaximas = params.HorasMaximas
 	if params.WorkPattern != nil {

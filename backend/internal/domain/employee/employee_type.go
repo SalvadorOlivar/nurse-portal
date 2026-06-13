@@ -5,13 +5,15 @@ import "fmt"
 type Type string
 
 const (
-	Nurse         Type = "NURSE"
-	NurseAssistant Type = "NURSE_ASSISTANT"
+	Nurse           Type = "NURSE"
+	NurseAssistant  Type = "NURSE_ASSISTANT"
+	Supervisor      Type = "SUPERVISOR"
+	AuxiliarServicio Type = "AUXILIAR_SERVICIO"
 )
 
 func (t Type) IsValid() bool {
 	switch t {
-	case Nurse, NurseAssistant:
+	case Nurse, NurseAssistant, Supervisor, AuxiliarServicio:
 		return true
 	default:
 		return false

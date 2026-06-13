@@ -15,7 +15,7 @@ export default function Home() {
           Gestionar Empleados
         </Link>
         <Link
-          href="/schedules"
+          href="/planificaciones"
           className="inline-flex items-center justify-center rounded-md border border-input bg-background px-6 py-2 text-sm font-medium hover:bg-accent transition-colors"
         >
           Planificaciones

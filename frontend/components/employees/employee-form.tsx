@@ -28,8 +28,9 @@ export function EmployeeForm({ employee }: EmployeeFormProps) {
 
   const [nombre, setNombre] = useState(employee?.nombre ?? '')
   const [apellido, setApellido] = useState(employee?.apellido ?? '')
-  const [tipo, setTipo] = useState<EmployeeType>(employee?.tipo ?? 'NURSE')
-  const [horasMinimas, setHorasMinimas] = useState(employee?.horas_minimas ?? 120)
+const [tipo, setTipo] = useState<EmployeeType>(employee?.tipo ?? 'NURSE')
+const [sector, setSector] = useState(employee?.sector ?? '')
+const [horasMinimas, setHorasMinimas] = useState(employee?.horas_minimas ?? 120)
   const [horasMaximas, setHorasMaximas] = useState(employee?.horas_maximas ?? 200)
   const [workDays, setWorkDays] = useState(employee?.work_days ?? 4)
   const [restDays, setRestDays] = useState(employee?.rest_days ?? 1)
@@ -43,6 +44,7 @@ export function EmployeeForm({ employee }: EmployeeFormProps) {
       nombre,
       apellido,
       tipo,
+      sector,
       horas_minimas: horasMinimas,
       horas_maximas: horasMaximas,
       work_days: isEditing ? workDays : (workDays !== 4 ? workDays : undefined),
@@ -96,16 +98,34 @@ export function EmployeeForm({ employee }: EmployeeFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="tipo">Tipo</Label>
-        <Select value={tipo} onValueChange={(v) => { if (v) setTipo(v as EmployeeType) }}>
+        <Select value={tipo} onValueChange={(v) => { if (v) { setTipo(v as EmployeeType); setSector('') } }}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="NURSE">Licenciada/o</SelectItem>
+            <SelectItem value="SUPERVISOR">Supervisor/a</SelectItem>
+            <SelectItem value="NURSE">Licenciada/o en Enfermería</SelectItem>
             <SelectItem value="NURSE_ASSISTANT">Enfermera/o</SelectItem>
+            <SelectItem value="AUXILIAR_SERVICIO">Auxiliar de Servicio</SelectItem>
           </SelectContent>
         </Select>
       </div>
+
+      {(tipo === 'NURSE' || tipo === 'NURSE_ASSISTANT') && (
+        <div className="space-y-2">
+          <Label htmlFor="sector">Sector</Label>
+          <Select value={sector} onValueChange={(v) => { if (v) setSector(v) }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Seleccionar sector" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1-8">Sector 1-8</SelectItem>
+              <SelectItem value="9-14">Sector 9-14</SelectItem>
+              <SelectItem value="15-20">Sector 15-20</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">

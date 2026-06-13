@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	nurseryhttp "github.com/tuusuario/nursery-portal/internal/adapters/http"
 	"github.com/tuusuario/nursery-portal/internal/adapters/repository/postgres"
@@ -44,7 +45,12 @@ func main() {
 	employeeSvc := services.NewEmployeeService(employeeRepo)
 	employeeHandler := nurseryhttp.NewEmployeeHandler(employeeSvc)
 
-	router := nurseryhttp.NewRouter(employeeHandler)
+	planifRepo := postgres.NewPlanificacionRepository(pool)
+	turnoRepo := postgres.NewTurnoRepository(pool)
+	planifSvc := services.NewPlanificacionService(planifRepo, employeeRepo, turnoRepo)
+	planifHandler := nurseryhttp.NewPlanificacionHandler(planifSvc)
+
+	router := nurseryhttp.NewRouter(employeeHandler, planifHandler)
 
 	server := &http.Server{
 		Addr:         ":" + port,

@@ -14,6 +14,8 @@ func TestParseType_Success(t *testing.T) {
 	}{
 		{"NURSE", employee.Nurse},
 		{"NURSE_ASSISTANT", employee.NurseAssistant},
+		{"SUPERVISOR", employee.Supervisor},
+		{"AUXILIAR_SERVICIO", employee.AuxiliarServicio},
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
@@ -32,5 +34,7 @@ func TestParseType_Invalid(t *testing.T) {
 func TestType_IsValid(t *testing.T) {
 	assert.True(t, employee.Nurse.IsValid())
 	assert.True(t, employee.NurseAssistant.IsValid())
+	assert.True(t, employee.Supervisor.IsValid())
+	assert.True(t, employee.AuxiliarServicio.IsValid())
 	assert.False(t, employee.Type("OTHER").IsValid())
 }

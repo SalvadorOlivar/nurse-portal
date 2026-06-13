@@ -9,8 +9,10 @@ import { toast } from 'sonner'
 import { EmployeeForm } from './employee-form'
 
 const tipoLabels: Record<string, string> = {
-  NURSE: 'Licenciada/o',
+  SUPERVISOR: 'Supervisor/a',
+  NURSE: 'Licenciada/o en Enfermería',
   NURSE_ASSISTANT: 'Enfermera/o',
+  AUXILIAR_SERVICIO: 'Auxiliar de Servicio',
 }
 
 export function EmployeeDetail({ id }: { id: string }) {

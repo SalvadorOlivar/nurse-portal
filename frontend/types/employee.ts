@@ -1,10 +1,11 @@
-export type EmployeeType = 'NURSE' | 'NURSE_ASSISTANT'
+export type EmployeeType = 'NURSE' | 'NURSE_ASSISTANT' | 'SUPERVISOR' | 'AUXILIAR_SERVICIO'
 
 export interface Employee {
   id: string
   nombre: string
   apellido: string
   tipo: EmployeeType
+  sector: string
   horas_minimas: number
   horas_maximas: number
   work_days: number
@@ -18,10 +19,11 @@ export interface CreateEmployeePayload {
   nombre: string
   apellido: string
   tipo: EmployeeType
+  sector: string
   horas_minimas: number
   horas_maximas: number
   work_days?: number
   rest_days?: number
 }
 
-export interface UpdateEmployeePayload extends CreateEmployeePayload {}
+export type UpdateEmployeePayload = CreateEmployeePayload

@@ -1,0 +1,70 @@
+package turno
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type TipoTurno string
+
+const (
+	Maniana    TipoTurno = "MANANA"
+	Tarde      TipoTurno = "TARDE"
+	Vespertino TipoTurno = "VESPERTINO"
+	Noche      TipoTurno = "NOCHE"
+)
+
+func (t TipoTurno) IsValid() bool {
+	switch t {
+	case Maniana, Tarde, Vespertino, Noche:
+		return true
+	}
+	return false
+}
+
+var AllTiposTurno = []TipoTurno{Maniana, Tarde, Vespertino, Noche}
+
+type Turno struct {
+	ID              string
+	PlanificacionID string
+	EmpleadoID      string
+	Dia             int
+	Tipo            TipoTurno
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+}
+
+type NewTurnoParams struct {
+	PlanificacionID string
+	EmpleadoID      string
+	Dia             int
+	Tipo            TipoTurno
+}
+
+func NewTurno(params NewTurnoParams) (*Turno, error) {
+	if params.PlanificacionID == "" {
+		return nil, fmt.Errorf("planificacion id is required")
+	}
+	if params.EmpleadoID == "" {
+		return nil, fmt.Errorf("empleado id is required")
+	}
+	if params.Dia < 1 || params.Dia > 31 {
+		return nil, fmt.Errorf("dia must be between 1 and 31")
+	}
+	if !params.Tipo.IsValid() {
+		return nil, fmt.Errorf("invalid turno type: %s", params.Tipo)
+	}
+
+	now := time.Now().UTC()
+	return &Turno{
+		ID:              uuid.New().String(),
+		PlanificacionID: params.PlanificacionID,
+		EmpleadoID:      params.EmpleadoID,
+		Dia:             params.Dia,
+		Tipo:            params.Tipo,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}, nil
+}
