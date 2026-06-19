@@ -79,17 +79,6 @@ export function useCerrarPlanificacion() {
   })
 }
 
-export function useGenerarTurnos() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (id: string) => planificacionesApi.generar(id),
-    onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: [...PLANIFICACIONES_KEY, id] })
-    },
-  })
-}
-
 export function useCreateTurno() {
   const queryClient = useQueryClient()
 
@@ -119,5 +108,38 @@ export function useStaffingRequirements(id: string) {
     queryKey: [...PLANIFICACIONES_KEY, id, 'requirements'],
     queryFn: () => planificacionesApi.getDotacion(id),
     enabled: !!id,
+  })
+}
+
+export function useSectores(id: string) {
+  return useQuery({
+    queryKey: [...PLANIFICACIONES_KEY, id, 'sectores'],
+    queryFn: () => planificacionesApi.getSectores(id),
+    enabled: !!id,
+  })
+}
+
+export function useUpdateSectores() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ planificacionId, payload }: { planificacionId: string; payload: { sectores: string[] } }) =>
+      planificacionesApi.updateSectores(planificacionId, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...PLANIFICACIONES_KEY, variables.planificacionId, 'sectores'] })
+      queryClient.invalidateQueries({ queryKey: [...PLANIFICACIONES_KEY, variables.planificacionId, 'requirements'] })
+    },
+  })
+}
+
+export function useUpdateDotacion() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ planificacionId, payload }: { planificacionId: string; payload: { items: { sector: string; tipo_empleado: string; turno: string; cantidad_minima: number }[] } }) =>
+      planificacionesApi.updateDotacion(planificacionId, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...PLANIFICACIONES_KEY, variables.planificacionId, 'requirements'] })
+    },
   })
 }

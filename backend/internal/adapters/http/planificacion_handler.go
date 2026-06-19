@@ -123,16 +123,6 @@ func (h *PlanificacionHandler) Cerrar(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *PlanificacionHandler) Generar(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if err := h.svc.Generar(r.Context(), id); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
 func (h *PlanificacionHandler) CreateTurno(w http.ResponseWriter, r *http.Request) {
 	planificacionID := chi.URLParam(r, "id")
 
@@ -140,6 +130,7 @@ func (h *PlanificacionHandler) CreateTurno(w http.ResponseWriter, r *http.Reques
 		EmpleadoID string `json:"empleado_id"`
 		Dia        int    `json:"dia"`
 		Tipo       string `json:"tipo"`
+		Sector     string `json:"sector"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -151,6 +142,7 @@ func (h *PlanificacionHandler) CreateTurno(w http.ResponseWriter, r *http.Reques
 		EmpleadoID:      req.EmpleadoID,
 		Dia:             req.Dia,
 		Tipo:            req.Tipo,
+		Sector:          req.Sector,
 	})
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -171,7 +163,12 @@ func (h *PlanificacionHandler) DeleteTurno(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *PlanificacionHandler) GetStaffingRequirements(w http.ResponseWriter, r *http.Request) {
-	dotacion := h.svc.GetStaffingRequirements()
+	id := chi.URLParam(r, "id")
+	dotacion, err := h.svc.GetStaffingRequirements(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "planificacion not found")
+		return
+	}
 
 	items := make([]dotacionItemResponse, len(dotacion))
 	for i, d := range dotacion {
@@ -179,6 +176,76 @@ func (h *PlanificacionHandler) GetStaffingRequirements(w http.ResponseWriter, r 
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"data": items})
+}
+
+func (h *PlanificacionHandler) GetSectores(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	sectores, err := h.svc.GetSectores(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "planificacion not found")
+		return
+	}
+
+	items := make([]sectorResponse, len(sectores))
+	for i, s := range sectores {
+		items[i] = sectorResponse{ID: s.ID, Nombre: s.Nombre}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"data": items})
+}
+
+func (h *PlanificacionHandler) UpdateSectores(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	var req struct {
+		Sectores []string `json:"sectores"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if err := h.svc.UpdateSectores(r.Context(), cmdplanif.UpdateSectoresCommand{
+		PlanificacionID: id,
+		Sectores:        req.Sectores,
+	}); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *PlanificacionHandler) UpdateDotacion(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	var req struct {
+		Items []dotacionUpdateInput `json:"items"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	items := make([]cmdplanif.DotacionItemInput, len(req.Items))
+	for i, in := range req.Items {
+		items[i] = cmdplanif.DotacionItemInput{
+			Sector:         in.Sector,
+			TipoEmpleado:   in.TipoEmpleado,
+			Turno:          in.Turno,
+			CantidadMinima: in.CantidadMinima,
+		}
+	}
+
+	if err := h.svc.UpdateDotacion(r.Context(), cmdplanif.UpdateDotacionCommand{
+		PlanificacionID: id,
+		Items:           items,
+	}); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 type planificacionResponse struct {
@@ -198,6 +265,7 @@ type turnoResponse struct {
 	EmpleadoID      string `json:"empleado_id"`
 	Dia             int    `json:"dia"`
 	Tipo            string `json:"tipo"`
+	Sector          string `json:"sector"`
 	CreatedAt       string `json:"created_at"`
 	UpdatedAt       string `json:"updated_at"`
 }
@@ -227,6 +295,7 @@ func toTurnoResponse(t *turno.Turno) turnoResponse {
 		EmpleadoID:      t.EmpleadoID,
 		Dia:             t.Dia,
 		Tipo:            string(t.Tipo),
+		Sector:          t.Sector,
 		CreatedAt:       t.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt:       t.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}
@@ -258,4 +327,16 @@ func toDotacionItemResponse(d planificacion.DotacionItem) dotacionItemResponse {
 		CantidadMinima: d.CantidadMinima,
 		Sector:         d.Sector,
 	}
+}
+
+type sectorResponse struct {
+	ID     string `json:"id"`
+	Nombre string `json:"nombre"`
+}
+
+type dotacionUpdateInput struct {
+	Sector         string `json:"sector"`
+	TipoEmpleado   string `json:"tipo_empleado"`
+	Turno          string `json:"turno"`
+	CantidadMinima int    `json:"cantidad_minima"`
 }

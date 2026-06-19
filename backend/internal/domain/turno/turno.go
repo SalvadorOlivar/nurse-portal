@@ -32,6 +32,7 @@ type Turno struct {
 	EmpleadoID      string
 	Dia             int
 	Tipo            TipoTurno
+	Sector          string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }
@@ -41,6 +42,7 @@ type NewTurnoParams struct {
 	EmpleadoID      string
 	Dia             int
 	Tipo            TipoTurno
+	Sector          string
 }
 
 func NewTurno(params NewTurnoParams) (*Turno, error) {
@@ -64,6 +66,7 @@ func NewTurno(params NewTurnoParams) (*Turno, error) {
 		EmpleadoID:      params.EmpleadoID,
 		Dia:             params.Dia,
 		Tipo:            params.Tipo,
+		Sector:          params.Sector,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}, nil

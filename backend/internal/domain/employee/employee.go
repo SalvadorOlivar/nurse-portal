@@ -47,13 +47,6 @@ func NewEmployee(params NewEmployeeParams) (*Employee, error) {
 	if params.HorasMaximas < params.HorasMinimas {
 		return nil, fmt.Errorf("horas maximas must be >= horas minimas")
 	}
-	if (params.Tipo == Nurse || params.Tipo == NurseAssistant) && params.Sector == "" {
-		return nil, fmt.Errorf("sector is required for %s", params.Tipo)
-	}
-	if (params.Tipo == Supervisor || params.Tipo == AuxiliarServicio) && params.Sector != "" {
-		return nil, fmt.Errorf("sector must be empty for %s", params.Tipo)
-	}
-
 	wp := DefaultWorkPattern()
 	if params.WorkPattern != nil {
 		wp = *params.WorkPattern
@@ -100,13 +93,6 @@ func (e *Employee) Update(params UpdateEmployeeParams) error {
 	}
 	if params.HorasMaximas < params.HorasMinimas {
 		return fmt.Errorf("horas maximas must be >= horas minimas")
-	}
-
-	if (params.Tipo == Nurse || params.Tipo == NurseAssistant) && params.Sector == "" {
-		return fmt.Errorf("sector is required for %s", params.Tipo)
-	}
-	if (params.Tipo == Supervisor || params.Tipo == AuxiliarServicio) && params.Sector != "" {
-		return fmt.Errorf("sector must be empty for %s", params.Tipo)
 	}
 
 	e.Nombre = params.Nombre

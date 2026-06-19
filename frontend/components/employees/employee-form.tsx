@@ -111,21 +111,19 @@ const [horasMinimas, setHorasMinimas] = useState(employee?.horas_minimas ?? 120)
         </Select>
       </div>
 
-      {(tipo === 'NURSE' || tipo === 'NURSE_ASSISTANT') && (
-        <div className="space-y-2">
-          <Label htmlFor="sector">Sector</Label>
-          <Select value={sector} onValueChange={(v) => { if (v) setSector(v) }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar sector" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1-8">Sector 1-8</SelectItem>
-              <SelectItem value="9-14">Sector 9-14</SelectItem>
-              <SelectItem value="15-20">Sector 15-20</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor="sector">Sector <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+        <Select value={sector} onValueChange={(v) => { if (v) setSector(v) }}>
+          <SelectTrigger>
+            <SelectValue placeholder="Sin sector específico" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1-8">Sector 1-8</SelectItem>
+            <SelectItem value="9-14">Sector 9-14</SelectItem>
+            <SelectItem value="15-20">Sector 15-20</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">

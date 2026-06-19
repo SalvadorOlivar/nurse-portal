@@ -47,7 +47,8 @@ func main() {
 
 	planifRepo := postgres.NewPlanificacionRepository(pool)
 	turnoRepo := postgres.NewTurnoRepository(pool)
-	planifSvc := services.NewPlanificacionService(planifRepo, employeeRepo, turnoRepo)
+	dotacionRepo := postgres.NewDotacionRepository(pool)
+	planifSvc := services.NewPlanificacionService(planifRepo, turnoRepo, dotacionRepo)
 	planifHandler := nurseryhttp.NewPlanificacionHandler(planifSvc)
 
 	router := nurseryhttp.NewRouter(employeeHandler, planifHandler)

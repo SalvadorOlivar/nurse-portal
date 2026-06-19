@@ -32,3 +32,11 @@ type TurnoRepository interface {
 	Delete(ctx context.Context, id string) error
 	DeleteByPlanificacion(ctx context.Context, planificacionID string) error
 }
+
+type DotacionRepository interface {
+	GetSectores(ctx context.Context, planificacionID string) ([]*planificacion.SectorPlanificacion, error)
+	SaveSectores(ctx context.Context, planificacionID string, nombres []string) error
+	GetDotacion(ctx context.Context, planificacionID string) ([]*planificacion.DotacionPlanificacion, error)
+	SaveDotacion(ctx context.Context, items []*planificacion.DotacionPlanificacion) error
+	DeleteByPlanificacion(ctx context.Context, planificacionID string) error
+}

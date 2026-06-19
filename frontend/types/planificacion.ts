@@ -19,6 +19,7 @@ export interface Turno {
   empleado_id: string
   dia: number
   tipo: TipoTurno
+  sector: string
   created_at: string
   updated_at: string
 }
@@ -37,6 +38,7 @@ export interface CreateTurnoPayload {
   empleado_id: string
   dia: number
   tipo: TipoTurno
+  sector: string
 }
 
 export interface DotacionItem {
@@ -44,4 +46,24 @@ export interface DotacionItem {
   turno: string
   cantidad_minima: number
   sector: string
+}
+
+export interface SectorItem {
+  id: string
+  nombre: string
+}
+
+export interface UpdateSectoresPayload {
+  sectores: string[]
+}
+
+export interface DotacionUpdateInput {
+  sector: string
+  tipo_empleado: string
+  turno: string
+  cantidad_minima: number
+}
+
+export interface UpdateDotacionPayload {
+  items: DotacionUpdateInput[]
 }

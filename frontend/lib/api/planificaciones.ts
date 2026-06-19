@@ -1,5 +1,15 @@
 import { api } from './client'
-import type { Planificacion, PlanificacionDetail, CreatePlanificacionPayload, CreateTurnoPayload, Turno, DotacionItem } from '@/types/planificacion'
+import type {
+  Planificacion,
+  PlanificacionDetail,
+  CreatePlanificacionPayload,
+  CreateTurnoPayload,
+  Turno,
+  DotacionItem,
+  SectorItem,
+  UpdateSectoresPayload,
+  UpdateDotacionPayload,
+} from '@/types/planificacion'
 
 export const planificacionesApi = {
   list: () => api.get<{ data: Planificacion[] }>('/planificaciones'),
@@ -18,8 +28,6 @@ export const planificacionesApi = {
 
   cerrar: (id: string) => api.post<void>(`/planificaciones/${id}/cerrar`, {}),
 
-  generar: (id: string) => api.post<void>(`/planificaciones/${id}/generar`, {}),
-
   createTurno: (planificacionId: string, payload: CreateTurnoPayload) =>
     api.post<Turno>(`/planificaciones/${planificacionId}/turnos`, payload),
 
@@ -28,4 +36,13 @@ export const planificacionesApi = {
 
   getDotacion: (id: string) =>
     api.get<{ data: DotacionItem[] }>(`/planificaciones/${id}/requirements`),
+
+  getSectores: (id: string) =>
+    api.get<{ data: SectorItem[] }>(`/planificaciones/${id}/sectores`),
+
+  updateSectores: (id: string, payload: UpdateSectoresPayload) =>
+    api.put<void>(`/planificaciones/${id}/sectores`, payload),
+
+  updateDotacion: (id: string, payload: UpdateDotacionPayload) =>
+    api.put<void>(`/planificaciones/${id}/dotacion`, payload),
 }

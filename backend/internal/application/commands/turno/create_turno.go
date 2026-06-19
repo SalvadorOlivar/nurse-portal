@@ -12,6 +12,7 @@ type CreateTurnoCommand struct {
 	EmpleadoID      string
 	Dia             int
 	Tipo            string
+	Sector          string
 }
 
 type CreateTurnoHandler struct {
@@ -28,6 +29,7 @@ func (h *CreateTurnoHandler) Handle(ctx context.Context, cmd CreateTurnoCommand)
 		EmpleadoID:      cmd.EmpleadoID,
 		Dia:             cmd.Dia,
 		Tipo:            turno.TipoTurno(cmd.Tipo),
+		Sector:          cmd.Sector,
 	})
 	if err != nil {
 		return nil, err
