@@ -2,7 +2,9 @@ package ports
 
 import (
 	"context"
+	"time"
 
+	"github.com/tuusuario/nursery-portal/internal/domain/auth"
 	"github.com/tuusuario/nursery-portal/internal/domain/employee"
 	"github.com/tuusuario/nursery-portal/internal/domain/planificacion"
 	"github.com/tuusuario/nursery-portal/internal/domain/turno"
@@ -39,4 +41,15 @@ type DotacionRepository interface {
 	GetDotacion(ctx context.Context, planificacionID string) ([]*planificacion.DotacionPlanificacion, error)
 	SaveDotacion(ctx context.Context, items []*planificacion.DotacionPlanificacion) error
 	DeleteByPlanificacion(ctx context.Context, planificacionID string) error
+}
+
+type AuthRepository interface {
+	FindUserByUsername(ctx context.Context, username string) (*auth.User, error)
+	FindUserBySessionHash(ctx context.Context, tokenHash string, now time.Time) (*auth.User, error)
+	SetPasswordHash(ctx context.Context, userID, passwordHash string) error
+	CreateSession(ctx context.Context, userID, tokenHash string, expiresAt time.Time) error
+	DeleteSession(ctx context.Context, tokenHash string) error
+	EnsureAdmin(ctx context.Context, username, passwordHash string) error
+	CreateEmployeeUser(ctx context.Context, username string, role auth.Role, employeeID string) error
+	UpdateEmployeeUser(ctx context.Context, employeeID, username string, role auth.Role) error
 }

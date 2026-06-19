@@ -21,7 +21,8 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	dbURL := getEnv("DATABASE_URL", "postgres://nursery:nursery_dev@localhost:5432/nursery_portal?sslmode=disable")
+	// dbURL := getEnv("DATABASE_URL", "postgres://nursery:nursery_dev@localhost:5432/nursery_portal?sslmode=disable")
+	dbURL := getEnv("DATABASE_URL", "postgresql://postgres:vUbnXYya9Wdjcb1A@db.zeiucxhkmxngysemqyrn.supabase.co:5432/postgres")
 	port := getEnv("PORT", "8080")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -41,17 +42,26 @@ func main() {
 
 	slog.Info("migrations applied successfully")
 
+	authRepo := postgres.NewAuthRepository(pool)
+	authSvc := services.NewAuthService(authRepo)
+	if err := authSvc.EnsureAdmin(ctx, os.Getenv("ADMIN_USERNAME"), os.Getenv("ADMIN_PASSWORD")); err != nil {
+		slog.Error("failed to ensure admin user", "error", err)
+		os.Exit(1)
+	}
+	authHandler := nurseryhttp.NewAuthHandler(authSvc)
+	authMiddleware := nurseryhttp.NewAuthMiddleware(authSvc)
+
 	employeeRepo := postgres.NewEmployeeRepository(pool)
-	employeeSvc := services.NewEmployeeService(employeeRepo)
+	employeeSvc := services.NewEmployeeService(employeeRepo, authSvc)
 	employeeHandler := nurseryhttp.NewEmployeeHandler(employeeSvc)
 
 	planifRepo := postgres.NewPlanificacionRepository(pool)
 	turnoRepo := postgres.NewTurnoRepository(pool)
 	dotacionRepo := postgres.NewDotacionRepository(pool)
 	planifSvc := services.NewPlanificacionService(planifRepo, turnoRepo, dotacionRepo)
-	planifHandler := nurseryhttp.NewPlanificacionHandler(planifSvc)
+	planifHandler := nurseryhttp.NewPlanificacionHandler(planifSvc, employeeSvc)
 
-	router := nurseryhttp.NewRouter(employeeHandler, planifHandler)
+	router := nurseryhttp.NewRouter(authHandler, authMiddleware, employeeHandler, planifHandler)
 
 	server := &http.Server{
 		Addr:         ":" + port,

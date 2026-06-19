@@ -28,7 +28,6 @@ const turnoColors: Record<string, string> = {
   NOCHE: 'bg-indigo-50',
 }
 
-const tipoOrden = ['SUPERVISOR', 'NURSE', 'NURSE_ASSISTANT', 'AUXILIAR_SERVICIO']
 const turnosOrden = ['MANANA', 'TARDE', 'VESPERTINO', 'NOCHE'] as const
 
 interface DotacionConfigProps {
@@ -37,12 +36,11 @@ interface DotacionConfigProps {
 }
 
 export function DotacionConfig({ planificacionId, readonly }: DotacionConfigProps) {
-  const { data: sectoresData } = useSectores(planificacionId)
+  useSectores(planificacionId)
   const { data: reqData } = useStaffingRequirements(planificacionId)
   const updateMutation = useUpdateDotacion()
 
-  const sectores = sectoresData?.data ?? []
-  const requirements = reqData?.data ?? []
+  const requirements = useMemo(() => reqData?.data ?? [], [reqData?.data])
 
   const [valores, setValores] = useState<Record<string, number>>({})
 
@@ -52,9 +50,11 @@ export function DotacionConfig({ planificacionId, readonly }: DotacionConfigProp
       const key = `${req.sector}|${req.tipo_empleado}|${req.turno}`
       map[key] = req.cantidad_minima
     }
-    setValores((prev) => {
-      const hasChanges = Object.keys(map).some((k) => map[k] !== prev[k])
-      return hasChanges ? map : prev
+    queueMicrotask(() => {
+      setValores((prev) => {
+        const hasChanges = Object.keys(map).some((k) => map[k] !== prev[k])
+        return hasChanges ? map : prev
+      })
     })
   }, [requirements])
 

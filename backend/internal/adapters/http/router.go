@@ -4,9 +4,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/tuusuario/nursery-portal/internal/domain/auth"
 )
 
-func NewRouter(employeeHandler *EmployeeHandler, planificacionHandler *PlanificacionHandler) *chi.Mux {
+func NewRouter(authHandler *AuthHandler, authMiddleware *AuthMiddleware, employeeHandler *EmployeeHandler, planificacionHandler *PlanificacionHandler) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -21,31 +22,43 @@ func NewRouter(employeeHandler *EmployeeHandler, planificacionHandler *Planifica
 	}))
 
 	r.Route("/api/v1", func(r chi.Router) {
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/login", authHandler.Login)
+			r.Post("/set-password", authHandler.SetPassword)
+			r.Group(func(r chi.Router) {
+				r.Use(authMiddleware.RequireAuth)
+				r.Get("/me", authHandler.Me)
+				r.Post("/logout", authHandler.Logout)
+			})
+		})
+
 		r.Route("/employees", func(r chi.Router) {
-			r.Post("/", employeeHandler.Create)
-			r.Get("/", employeeHandler.List)
+			r.Use(authMiddleware.RequireAuth)
+			r.With(authMiddleware.RequireRoles(auth.RoleAdmin)).Post("/", employeeHandler.Create)
+			r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Get("/", employeeHandler.List)
 			r.Route("/{id}", func(r chi.Router) {
-				r.Get("/", employeeHandler.GetByID)
-				r.Put("/", employeeHandler.Update)
-				r.Delete("/", employeeHandler.Deactivate)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Get("/", employeeHandler.GetByID)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin)).Put("/", employeeHandler.Update)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin)).Delete("/", employeeHandler.Deactivate)
 			})
 		})
 
 		r.Route("/planificaciones", func(r chi.Router) {
-			r.Post("/", planificacionHandler.Create)
+			r.Use(authMiddleware.RequireAuth)
+			r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Post("/", planificacionHandler.Create)
 			r.Get("/", planificacionHandler.List)
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", planificacionHandler.GetByID)
-				r.Put("/", planificacionHandler.Update)
-				r.Delete("/", planificacionHandler.Delete)
-				r.Post("/publicar", planificacionHandler.Publicar)
-				r.Post("/cerrar", planificacionHandler.Cerrar)
-				r.Post("/turnos", planificacionHandler.CreateTurno)
-				r.Delete("/turnos/{turnoId}", planificacionHandler.DeleteTurno)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Put("/", planificacionHandler.Update)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Delete("/", planificacionHandler.Delete)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Post("/publicar", planificacionHandler.Publicar)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Post("/cerrar", planificacionHandler.Cerrar)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Post("/turnos", planificacionHandler.CreateTurno)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Delete("/turnos/{turnoId}", planificacionHandler.DeleteTurno)
 				r.Get("/requirements", planificacionHandler.GetStaffingRequirements)
 				r.Get("/sectores", planificacionHandler.GetSectores)
-				r.Put("/sectores", planificacionHandler.UpdateSectores)
-				r.Put("/dotacion", planificacionHandler.UpdateDotacion)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Put("/sectores", planificacionHandler.UpdateSectores)
+				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Put("/dotacion", planificacionHandler.UpdateDotacion)
 			})
 		})
 	})

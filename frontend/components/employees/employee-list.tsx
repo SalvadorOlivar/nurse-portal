@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { useEmployees, useDeactivateEmployee } from '@/features/employees/hooks/use-employees'
 import { toast } from 'sonner'
 import type { Employee } from '@/types/employee'
+import { useMe } from '@/features/auth/hooks/use-auth'
 
 const tipoLabels: Record<string, string> = {
   SUPERVISOR: 'Supervisor/a',
@@ -23,7 +24,7 @@ const tipoLabels: Record<string, string> = {
   AUXILIAR_SERVICIO: 'Auxiliar de Servicio',
 }
 
-function EmployeeRow({ employee }: { employee: Employee }) {
+function EmployeeRow({ employee, canEdit }: { employee: Employee; canEdit: boolean }) {
   const deactivateMutation = useDeactivateEmployee()
 
   async function handleDeactivate() {
@@ -53,9 +54,9 @@ function EmployeeRow({ employee }: { employee: Employee }) {
       <TableCell className="text-right">
         <div className="flex justify-end gap-2">
           <Link href={`/employees/${employee.id}`}>
-            <Button variant="outline" size="sm">Editar</Button>
+            <Button variant="outline" size="sm">{canEdit ? 'Editar' : 'Ver'}</Button>
           </Link>
-          {employee.activo && (
+          {canEdit && employee.activo && (
             <Button
               variant="outline"
               size="sm"
@@ -74,6 +75,8 @@ function EmployeeRow({ employee }: { employee: Employee }) {
 
 export function EmployeeList() {
   const { data, isLoading, isError } = useEmployees()
+  const { data: meData } = useMe()
+  const canEdit = meData?.user.role === 'ADMIN'
 
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Cargando empleados...</div>
@@ -93,9 +96,11 @@ export function EmployeeList() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Empleados</CardTitle>
-        <Link href="/employees/new">
-          <Button>Nuevo empleado</Button>
-        </Link>
+        {canEdit && (
+          <Link href="/employees/new">
+            <Button>Nuevo empleado</Button>
+          </Link>
+        )}
       </CardHeader>
       <CardContent>
         {employees.length === 0 ? (
@@ -116,7 +121,7 @@ export function EmployeeList() {
             </TableHeader>
             <TableBody>
               {employees.map((employee) => (
-                <EmployeeRow key={employee.id} employee={employee} />
+                <EmployeeRow key={employee.id} employee={employee} canEdit={canEdit} />
               ))}
             </TableBody>
           </Table>

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { EmployeeForm } from './employee-form'
+import { useMe } from '@/features/auth/hooks/use-auth'
 
 const tipoLabels: Record<string, string> = {
   SUPERVISOR: 'Supervisor/a',
@@ -18,7 +19,9 @@ const tipoLabels: Record<string, string> = {
 export function EmployeeDetail({ id }: { id: string }) {
   const router = useRouter()
   const { data: employee, isLoading, isError } = useEmployee(id)
+  const { data: meData } = useMe()
   const deactivateMutation = useDeactivateEmployee()
+  const canEdit = meData?.user.role === 'ADMIN'
 
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Cargando...</div>
@@ -53,7 +56,7 @@ export function EmployeeDetail({ id }: { id: string }) {
           <Button variant="outline" onClick={() => router.push('/employees')}>
             Volver
           </Button>
-          {employee.activo && (
+          {canEdit && employee.activo && (
             <Button
               variant="outline"
               className="text-destructive"
@@ -102,14 +105,16 @@ export function EmployeeDetail({ id }: { id: string }) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Editar empleado</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EmployeeForm employee={employee} />
-        </CardContent>
-      </Card>
+      {canEdit && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Editar empleado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EmployeeForm employee={employee} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

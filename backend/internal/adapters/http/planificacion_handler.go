@@ -9,16 +9,18 @@ import (
 	cmdturno "github.com/tuusuario/nursery-portal/internal/application/commands/turno"
 	qryplanif "github.com/tuusuario/nursery-portal/internal/application/queries/planificacion"
 	"github.com/tuusuario/nursery-portal/internal/application/services"
+	"github.com/tuusuario/nursery-portal/internal/domain/employee"
 	"github.com/tuusuario/nursery-portal/internal/domain/planificacion"
 	"github.com/tuusuario/nursery-portal/internal/domain/turno"
 )
 
 type PlanificacionHandler struct {
-	svc *services.PlanificacionService
+	svc         *services.PlanificacionService
+	employeeSvc *services.EmployeeService
 }
 
-func NewPlanificacionHandler(svc *services.PlanificacionService) *PlanificacionHandler {
-	return &PlanificacionHandler{svc: svc}
+func NewPlanificacionHandler(svc *services.PlanificacionService, employeeSvc *services.EmployeeService) *PlanificacionHandler {
+	return &PlanificacionHandler{svc: svc, employeeSvc: employeeSvc}
 }
 
 func (h *PlanificacionHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +70,13 @@ func (h *PlanificacionHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toPlanificacionDetailResponse(result))
+	employees, err := h.employeeSvc.List(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, toPlanificacionDetailResponse(result, employees))
 }
 
 func (h *PlanificacionHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -272,7 +280,8 @@ type turnoResponse struct {
 
 type planificacionDetailResponse struct {
 	planificacionResponse
-	Turnos []turnoResponse `json:"turnos"`
+	Turnos    []turnoResponse    `json:"turnos"`
+	Employees []employeeResponse `json:"employees"`
 }
 
 func toPlanificacionResponse(p *planificacion.Planificacion) planificacionResponse {
@@ -301,15 +310,20 @@ func toTurnoResponse(t *turno.Turno) turnoResponse {
 	}
 }
 
-func toPlanificacionDetailResponse(detail *qryplanif.PlanificacionConTurnos) planificacionDetailResponse {
+func toPlanificacionDetailResponse(detail *qryplanif.PlanificacionConTurnos, employees []*employee.Employee) planificacionDetailResponse {
 	turnos := make([]turnoResponse, len(detail.Turnos))
 	for i, t := range detail.Turnos {
 		turnos[i] = toTurnoResponse(t)
+	}
+	employeeItems := make([]employeeResponse, len(employees))
+	for i, emp := range employees {
+		employeeItems[i] = toResponse(emp)
 	}
 
 	return planificacionDetailResponse{
 		planificacionResponse: toPlanificacionResponse(detail.Planificacion),
 		Turnos:                turnos,
+		Employees:             employeeItems,
 	}
 }
 

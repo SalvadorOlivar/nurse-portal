@@ -8,12 +8,12 @@ import {
   usePublicarPlanificacion,
   useCerrarPlanificacion,
 } from '@/features/planificaciones/hooks/use-planificaciones'
-import { useEmployees } from '@/features/employees/hooks/use-employees'
 
 import { PlanillaDiaria } from './planilla-diaria'
 import { SectorManager } from './sector-manager'
 import { toast } from 'sonner'
 import type { PlanificacionDetail } from '@/types/planificacion'
+import { useMe } from '@/features/auth/hooks/use-auth'
 
 const estadoColors: Record<string, 'default' | 'secondary' | 'outline'> = {
   BORRADOR: 'secondary',
@@ -27,13 +27,13 @@ interface CalendarioProps {
 
 export function PlanificacionCalendario({ planificacionId }: CalendarioProps) {
   const { data: planifData, isLoading: planifLoading, isError: planifError } = usePlanificacion(planificacionId)
-  const { data: empData, isLoading: empLoading } = useEmployees()
+  const { data: meData } = useMe()
   const publicarMutation = usePublicarPlanificacion()
   const cerrarMutation = useCerrarPlanificacion()
 
   const [vista, setVista] = useState<'planilla' | 'configuracion'>('planilla')
 
-  if (planifLoading || empLoading) {
+  if (planifLoading) {
     return <div className="text-center py-8 text-muted-foreground">Cargando planificación...</div>
   }
 
@@ -42,10 +42,11 @@ export function PlanificacionCalendario({ planificacionId }: CalendarioProps) {
   }
 
   const planificacion: PlanificacionDetail = planifData
-  const employees = empData?.data ?? []
+  const employees = planificacion.employees ?? []
   const activeEmployees = employees.filter((e) => e.activo)
   const dias = planificacion.dias
-  const readonly = planificacion.estado !== 'BORRADOR'
+  const canEdit = meData?.user.role === 'ADMIN' || meData?.user.role === 'SUPERVISOR'
+  const readonly = !canEdit || planificacion.estado !== 'BORRADOR'
 
   async function handlePublicar() {
     try {
@@ -82,12 +83,12 @@ export function PlanificacionCalendario({ planificacionId }: CalendarioProps) {
         </div>
 
         <div className="flex gap-2">
-          {planificacion.estado === 'BORRADOR' && (
+          {canEdit && planificacion.estado === 'BORRADOR' && (
             <Button onClick={handlePublicar} disabled={publicarMutation.isPending}>
               Publicar
             </Button>
           )}
-          {planificacion.estado === 'PUBLICADO' && (
+          {canEdit && planificacion.estado === 'PUBLICADO' && (
             <Button variant="outline" onClick={handleCerrar} disabled={cerrarMutation.isPending}>
               Cerrar planificación
             </Button>
@@ -107,17 +108,19 @@ export function PlanificacionCalendario({ planificacionId }: CalendarioProps) {
         >
           Vista planilla
         </button>
-        <button
-          type="button"
-          onClick={() => setVista('configuracion')}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            vista === 'configuracion'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Configuración
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() => setVista('configuracion')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              vista === 'configuracion'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Configuración
+          </button>
+        )}
       </div>
 
       {vista === 'planilla' ? (

@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { usePlanificaciones, useDeletePlanificacion } from '@/features/planificaciones/hooks/use-planificaciones'
 import { toast } from 'sonner'
 import type { Planificacion } from '@/types/planificacion'
+import { useMe } from '@/features/auth/hooks/use-auth'
 
 const monthNames = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -33,7 +34,7 @@ const estadoLabels: Record<string, string> = {
   CERRADO: 'Cerrado',
 }
 
-function PlanificacionRow({ planificacion }: { planificacion: Planificacion }) {
+function PlanificacionRow({ planificacion, canEdit }: { planificacion: Planificacion; canEdit: boolean }) {
   const deleteMutation = useDeletePlanificacion()
 
   async function handleDelete() {
@@ -61,7 +62,7 @@ function PlanificacionRow({ planificacion }: { planificacion: Planificacion }) {
           <Link href={`/planificaciones/${planificacion.id}`}>
             <Button variant="outline" size="sm">Ver</Button>
           </Link>
-          {planificacion.estado === 'BORRADOR' && (
+          {canEdit && planificacion.estado === 'BORRADOR' && (
             <Button
               variant="outline"
               size="sm"
@@ -80,6 +81,8 @@ function PlanificacionRow({ planificacion }: { planificacion: Planificacion }) {
 
 export function PlanificacionList() {
   const { data, isLoading, isError } = usePlanificaciones()
+  const { data: meData } = useMe()
+  const canEdit = meData?.user.role === 'ADMIN' || meData?.user.role === 'SUPERVISOR'
 
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Cargando planificaciones...</div>
@@ -99,9 +102,11 @@ export function PlanificacionList() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Planificaciones</CardTitle>
-        <Link href="/planificaciones/new">
-          <Button>Nueva planificación</Button>
-        </Link>
+        {canEdit && (
+          <Link href="/planificaciones/new">
+            <Button>Nueva planificación</Button>
+          </Link>
+        )}
       </CardHeader>
       <CardContent>
         {plans.length === 0 ? (
@@ -121,7 +126,7 @@ export function PlanificacionList() {
             </TableHeader>
             <TableBody>
               {plans.map((plan) => (
-                <PlanificacionRow key={plan.id} planificacion={plan} />
+                <PlanificacionRow key={plan.id} planificacion={plan} canEdit={canEdit} />
               ))}
             </TableBody>
           </Table>

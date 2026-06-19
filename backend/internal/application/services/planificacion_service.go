@@ -102,4 +102,3 @@ func (s *PlanificacionService) UpdateDotacion(ctx context.Context, cmd cmdplanif
 	return s.updateDotacionHandler.Handle(ctx, cmd)
 }
 
-

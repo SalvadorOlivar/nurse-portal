@@ -1,3 +1,5 @@
+import type { Employee } from './employee'
+
 export type EstadoPlanificacion = 'BORRADOR' | 'PUBLICADO' | 'CERRADO'
 
 export type TipoTurno = 'MANANA' | 'TARDE' | 'VESPERTINO' | 'NOCHE'
@@ -26,6 +28,7 @@ export interface Turno {
 
 export interface PlanificacionDetail extends Planificacion {
   turnos: Turno[]
+  employees: Employee[]
 }
 
 export interface CreatePlanificacionPayload {

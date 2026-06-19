@@ -4,7 +4,6 @@ import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { usePlanificacion, useSectores, useCreateTurno, useDeleteTurno } from '@/features/planificaciones/hooks/use-planificaciones'
-import { useEmployees } from '@/features/employees/hooks/use-employees'
 import type { Turno, TipoTurno } from '@/types/planificacion'
 import type { Employee } from '@/types/employee'
 
@@ -38,6 +37,9 @@ const turnoBadgeColors: Record<string, string> = {
 
 const tipoOrden = ['SUPERVISOR', 'NURSE', 'NURSE_ASSISTANT', 'AUXILIAR_SERVICIO']
 const turnosOrden: TipoTurno[] = ['MANANA', 'TARDE', 'VESPERTINO', 'NOCHE']
+const emptyTurnos: Turno[] = []
+const emptyEmployees: Employee[] = []
+const emptySectores: { id: string; nombre: string }[] = []
 
 interface PlanillaDiariaProps {
   planificacionId: string
@@ -87,7 +89,6 @@ function EmployeeSelector({
 
 export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProps) {
   const { data: planifData } = usePlanificacion(planificacionId)
-  const { data: empData } = useEmployees()
   const { data: sectoresData } = useSectores(planificacionId)
   const createTurnoMutation = useCreateTurno()
   const deleteTurnoMutation = useDeleteTurno()
@@ -95,9 +96,9 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
   const [dia, setDia] = useState(1)
   const [addingTo, setAddingTo] = useState<{ sector: string; tipo: string; turno: string } | null>(null)
 
-  const employees = empData?.data ?? []
+  const employees = planifData?.employees ?? emptyEmployees
   const activeEmployees = employees.filter((e) => e.activo)
-  const turnos = planifData?.turnos ?? []
+  const turnos = planifData?.turnos ?? emptyTurnos
 
   const turnosDelDia = useMemo(() => {
     return turnos.filter((t) => t.dia === dia)
@@ -159,7 +160,7 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
     return map
   }, [turnosDelDia, activeEmployees])
 
-  const sectores = sectoresData?.data ?? []
+  const sectores = sectoresData?.data ?? emptySectores
 
   const allSectores = useMemo(() => {
     return sectores.map((s) => s.nombre).sort((a, b) => {
