@@ -34,7 +34,7 @@ func (h *EmployeeHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	emp, err := h.svc.Create(r.Context(), cmd.CreateEmployeeCommand{
+	emp, initialPassword, err := h.svc.Create(r.Context(), cmd.CreateEmployeeCommand{
 		Nombre:       req.Nombre,
 		Apellido:     req.Apellido,
 		Tipo:         req.Tipo,
@@ -49,7 +49,9 @@ func (h *EmployeeHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, toResponse(emp))
+	resp := toResponse(emp)
+	resp.InitialPassword = initialPassword
+	writeJSON(w, http.StatusCreated, resp)
 }
 
 func (h *EmployeeHandler) List(w http.ResponseWriter, r *http.Request) {
@@ -126,18 +128,19 @@ func (h *EmployeeHandler) Deactivate(w http.ResponseWriter, r *http.Request) {
 }
 
 type employeeResponse struct {
-	ID            string `json:"id"`
-	Nombre        string `json:"nombre"`
-	Apellido      string `json:"apellido"`
-	Tipo          string `json:"tipo"`
-	Sector        string `json:"sector"`
-	HorasMinimas  int    `json:"horas_minimas"`
-	HorasMaximas  int    `json:"horas_maximas"`
-	WorkDays      int    `json:"work_days"`
-	RestDays      int    `json:"rest_days"`
-	Activo        bool   `json:"activo"`
-	CreatedAt     string `json:"created_at"`
-	UpdatedAt     string `json:"updated_at"`
+	ID              string `json:"id"`
+	Nombre          string `json:"nombre"`
+	Apellido        string `json:"apellido"`
+	Tipo            string `json:"tipo"`
+	Sector          string `json:"sector"`
+	HorasMinimas    int    `json:"horas_minimas"`
+	HorasMaximas    int    `json:"horas_maximas"`
+	WorkDays        int    `json:"work_days"`
+	RestDays        int    `json:"rest_days"`
+	Activo          bool   `json:"activo"`
+	InitialPassword string `json:"initial_password,omitempty"`
+	CreatedAt       string `json:"created_at"`
+	UpdatedAt       string `json:"updated_at"`
 }
 
 func toResponse(e *employee.Employee) employeeResponse {

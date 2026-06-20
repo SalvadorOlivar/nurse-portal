@@ -64,7 +64,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link href="/planificaciones" className="hover:text-primary transition-colors">
               Planificaciones
             </Link>
-            <span className="text-muted-foreground">{user.username}</span>
+            <Link href="/profile" className="text-muted-foreground hover:text-primary transition-colors">
+              {user.username}
+            </Link>
             <Button variant="outline" size="sm" onClick={handleLogout} disabled={logoutMutation.isPending}>
               Salir
             </Button>

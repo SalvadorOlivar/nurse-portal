@@ -49,6 +49,15 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if result.MustChangePassword {
+		slog.Info("login requires password change", "username", result.User.Username)
+		writeJSON(w, http.StatusOK, map[string]any{
+			"must_change_password": true,
+			"username":             result.User.Username,
+		})
+		return
+	}
+
 	if result.Token == "" {
 		slog.Warn("login no token returned", "username", result.User.Username, "has_password", req.Password != "")
 		writeJSON(w, http.StatusOK, map[string]any{

@@ -22,8 +22,9 @@ import (
 const SessionTTL = 7 * 24 * time.Hour
 
 var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrPasswordAlreadySet = errors.New("password already set")
+	ErrInvalidCredentials     = errors.New("invalid credentials")
+	ErrPasswordAlreadySet     = errors.New("password already set")
+	ErrPasswordChangeRequired = errors.New("password change required")
 )
 
 type AuthService struct {
@@ -31,10 +32,11 @@ type AuthService struct {
 }
 
 type AuthResult struct {
-	User             *auth.User
-	Token            string
-	ExpiresAt        time.Time
-	RequiresPassword bool
+	User               *auth.User
+	Token              string
+	ExpiresAt          time.Time
+	RequiresPassword   bool
+	MustChangePassword bool
 }
 
 func NewAuthService(repo ports.AuthRepository) *AuthService {
@@ -49,6 +51,10 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*Au
 
 	if user.NeedsPassword() {
 		return &AuthResult{User: user, RequiresPassword: true}, nil
+	}
+
+	if user.MustChangePassword {
+		return &AuthResult{User: user, MustChangePassword: true}, nil
 	}
 
 	if password == "" {
@@ -71,7 +77,7 @@ func (s *AuthService) SetPassword(ctx context.Context, username, password string
 	if err != nil {
 		return nil, ErrInvalidCredentials
 	}
-	if !user.NeedsPassword() {
+	if !user.NeedsPassword() && !user.MustChangePassword {
 		return nil, ErrPasswordAlreadySet
 	}
 	if len(password) < 8 {
@@ -124,13 +130,24 @@ func (s *AuthService) EnsureAdmin(ctx context.Context, username, password string
 	return s.repo.EnsureAdmin(ctx, username, string(hash))
 }
 
-func (s *AuthService) CreateEmployeeAccount(ctx context.Context, emp *employee.Employee) error {
+func (s *AuthService) CreateEmployeeAccount(ctx context.Context, emp *employee.Employee) (string, error) {
 	username := UsernameForEmployee(emp.Nombre, emp.Apellido)
 	role := auth.RoleEmployee
 	if emp.Tipo == employee.Supervisor {
 		role = auth.RoleSupervisor
 	}
-	return s.repo.CreateEmployeeUser(ctx, username, role, emp.ID)
+
+	randomPwd := generateRandomPassword()
+	hash, err := bcrypt.GenerateFromPassword([]byte(randomPwd), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
+	if err := s.repo.CreateEmployeeUser(ctx, username, role, emp.ID, string(hash)); err != nil {
+		return "", err
+	}
+
+	return randomPwd, nil
 }
 
 func (s *AuthService) UpdateEmployeeAccount(ctx context.Context, emp *employee.Employee) error {
@@ -160,6 +177,19 @@ func randomToken() (string, error) {
 		return "", err
 	}
 	return base64.RawURLEncoding.EncodeToString(bytes), nil
+}
+
+const randomPasswordChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+func generateRandomPassword() string {
+	bytes := make([]byte, 12)
+	if _, err := rand.Read(bytes); err != nil {
+		return "TempPass123"
+	}
+	for i, b := range bytes {
+		bytes[i] = randomPasswordChars[int(b)%len(randomPasswordChars)]
+	}
+	return string(bytes)
 }
 
 func hashToken(token string) string {

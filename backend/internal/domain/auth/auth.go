@@ -20,13 +20,14 @@ func (r Role) IsValid() bool {
 }
 
 type User struct {
-	ID           string
-	Username     string
-	PasswordHash *string
-	Role         Role
-	EmployeeID   *string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID                 string
+	Username           string
+	PasswordHash       *string
+	Role               Role
+	EmployeeID         *string
+	MustChangePassword bool
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 func (u *User) NeedsPassword() bool {

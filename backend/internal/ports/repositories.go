@@ -50,6 +50,6 @@ type AuthRepository interface {
 	CreateSession(ctx context.Context, userID, tokenHash string, expiresAt time.Time) error
 	DeleteSession(ctx context.Context, tokenHash string) error
 	EnsureAdmin(ctx context.Context, username, passwordHash string) error
-	CreateEmployeeUser(ctx context.Context, username string, role auth.Role, employeeID string) error
+	CreateEmployeeUser(ctx context.Context, username string, role auth.Role, employeeID string, passwordHash string) error
 	UpdateEmployeeUser(ctx context.Context, employeeID, username string, role auth.Role) error
 }

@@ -32,19 +32,20 @@ func NewEmployeeService(repo ports.EmployeeRepository, authSvc *AuthService) *Em
 	}
 }
 
-func (s *EmployeeService) Create(ctx context.Context, params cmd.CreateEmployeeCommand) (*domain.Employee, error) {
+func (s *EmployeeService) Create(ctx context.Context, params cmd.CreateEmployeeCommand) (*domain.Employee, string, error) {
 	emp, err := s.createHandler.Handle(ctx, params)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if s.authSvc == nil {
-		return emp, nil
+		return emp, "", nil
 	}
-	if err := s.authSvc.CreateEmployeeAccount(ctx, emp); err != nil {
+	password, err := s.authSvc.CreateEmployeeAccount(ctx, emp)
+	if err != nil {
 		_ = s.repo.Delete(ctx, emp.ID)
-		return nil, err
+		return nil, "", err
 	}
-	return emp, nil
+	return emp, password, nil
 }
 
 func (s *EmployeeService) Update(ctx context.Context, params cmd.UpdateEmployeeCommand) (*domain.Employee, error) {

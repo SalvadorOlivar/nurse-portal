@@ -8,8 +8,9 @@ export interface AuthUser {
 }
 
 export interface LoginResponse {
-  requires_password: boolean
+  requires_password?: boolean
   password_required?: boolean
+  must_change_password?: boolean
   username?: string
   user?: AuthUser
 }

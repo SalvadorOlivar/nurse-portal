@@ -21,7 +21,7 @@ func NewAuthRepository(pool *pgxpool.Pool) *AuthRepository {
 
 func (r *AuthRepository) FindUserByUsername(ctx context.Context, username string) (*auth.User, error) {
 	row := r.pool.QueryRow(ctx, `
-		SELECT id, username, password_hash, role, employee_id, created_at, updated_at
+		SELECT id, username, password_hash, role, employee_id, must_change_password, created_at, updated_at
 		FROM auth_users
 		WHERE username = $1
 	`, username)
@@ -30,7 +30,7 @@ func (r *AuthRepository) FindUserByUsername(ctx context.Context, username string
 
 func (r *AuthRepository) FindUserBySessionHash(ctx context.Context, tokenHash string, now time.Time) (*auth.User, error) {
 	row := r.pool.QueryRow(ctx, `
-		SELECT u.id, u.username, u.password_hash, u.role, u.employee_id, u.created_at, u.updated_at
+		SELECT u.id, u.username, u.password_hash, u.role, u.employee_id, u.must_change_password, u.created_at, u.updated_at
 		FROM auth_sessions s
 		JOIN auth_users u ON u.id = s.user_id
 		WHERE s.token_hash = $1 AND s.expires_at > $2
@@ -41,8 +41,8 @@ func (r *AuthRepository) FindUserBySessionHash(ctx context.Context, tokenHash st
 func (r *AuthRepository) SetPasswordHash(ctx context.Context, userID, passwordHash string) error {
 	tag, err := r.pool.Exec(ctx, `
 		UPDATE auth_users
-		SET password_hash = $1, updated_at = NOW()
-		WHERE id = $2 AND password_hash IS NULL
+		SET password_hash = $1, must_change_password = false, updated_at = NOW()
+		WHERE id = $2 AND (password_hash IS NULL OR must_change_password = true)
 	`, passwordHash, userID)
 	if err != nil {
 		return err
@@ -79,11 +79,11 @@ func (r *AuthRepository) EnsureAdmin(ctx context.Context, username, passwordHash
 	return err
 }
 
-func (r *AuthRepository) CreateEmployeeUser(ctx context.Context, username string, role auth.Role, employeeID string) error {
+func (r *AuthRepository) CreateEmployeeUser(ctx context.Context, username string, role auth.Role, employeeID string, passwordHash string) error {
 	_, err := r.pool.Exec(ctx, `
-		INSERT INTO auth_users (username, role, employee_id)
-		VALUES ($1, $2, $3)
-	`, username, string(role), employeeID)
+		INSERT INTO auth_users (username, role, employee_id, password_hash, must_change_password)
+		VALUES ($1, $2, $3, $4, true)
+	`, username, string(role), employeeID, passwordHash)
 	if isUniqueViolation(err) {
 		return errors.New("username already exists")
 	}
@@ -100,7 +100,7 @@ func (r *AuthRepository) UpdateEmployeeUser(ctx context.Context, employeeID, use
 		return errors.New("username already exists")
 	}
 	if err == nil && tag.RowsAffected() == 0 {
-		return r.CreateEmployeeUser(ctx, username, role, employeeID)
+		return r.CreateEmployeeUser(ctx, username, role, employeeID, "")
 	}
 	return err
 }
@@ -115,22 +115,24 @@ func scanAuthUser(s scanner) (*auth.User, error) {
 		id, username, role string
 		passwordHash       *string
 		employeeID         *string
+		mustChangePassword bool
 		createdAt          time.Time
 		updatedAt          time.Time
 	)
-	if err := s.Scan(&id, &username, &passwordHash, &role, &employeeID, &createdAt, &updatedAt); err != nil {
+	if err := s.Scan(&id, &username, &passwordHash, &role, &employeeID, &mustChangePassword, &createdAt, &updatedAt); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("auth user not found")
 		}
 		return nil, err
 	}
 	return &auth.User{
-		ID:           id,
-		Username:     username,
-		PasswordHash: passwordHash,
-		Role:         auth.Role(role),
-		EmployeeID:   employeeID,
-		CreatedAt:    createdAt,
-		UpdatedAt:    updatedAt,
+		ID:                 id,
+		Username:           username,
+		PasswordHash:       passwordHash,
+		Role:               auth.Role(role),
+		EmployeeID:         employeeID,
+		MustChangePassword: mustChangePassword,
+		CreatedAt:          createdAt,
+		UpdatedAt:          updatedAt,
 	}, nil
 }

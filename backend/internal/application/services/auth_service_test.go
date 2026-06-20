@@ -51,10 +51,11 @@ func (r *fakeAuthRepo) SetPasswordHash(_ context.Context, userID, passwordHash s
 	}
 	for _, user := range r.users {
 		if user.ID == userID {
-			if user.PasswordHash != nil {
+			if user.PasswordHash != nil && !user.MustChangePassword {
 				return errors.New("password already set")
 			}
 			user.PasswordHash = &passwordHash
+			user.MustChangePassword = false
 			return nil
 		}
 	}
@@ -76,8 +77,8 @@ func (r *fakeAuthRepo) EnsureAdmin(_ context.Context, username, passwordHash str
 	return nil
 }
 
-func (r *fakeAuthRepo) CreateEmployeeUser(_ context.Context, username string, role auth.Role, employeeID string) error {
-	r.users[username] = &auth.User{ID: "employee-user-id", Username: username, Role: role, EmployeeID: &employeeID}
+func (r *fakeAuthRepo) CreateEmployeeUser(_ context.Context, username string, role auth.Role, employeeID string, passwordHash string) error {
+	r.users[username] = &auth.User{ID: "employee-user-id", Username: username, Role: role, EmployeeID: &employeeID, PasswordHash: &passwordHash, MustChangePassword: true}
 	return nil
 }
 
@@ -91,7 +92,8 @@ func (r *fakeAuthRepo) UpdateEmployeeUser(_ context.Context, employeeID, usernam
 			return nil
 		}
 	}
-	return r.CreateEmployeeUser(context.Background(), username, role, employeeID)
+	emptyHash := ""
+	return r.CreateEmployeeUser(context.Background(), username, role, employeeID, emptyHash)
 }
 
 func TestLoginRequiresPasswordForFirstAccessEmployee(t *testing.T) {
@@ -130,6 +132,38 @@ func TestSetPasswordRejectsExistingPassword(t *testing.T) {
 	_, err = svc.SetPassword(context.Background(), "ana.perez", "newpassword123")
 
 	require.ErrorIs(t, err, ErrPasswordAlreadySet)
+}
+
+func TestLoginReturnsMustChangePassword(t *testing.T) {
+	hash, err := bcrypt.GenerateFromPassword([]byte("initial123"), bcrypt.DefaultCost)
+	require.NoError(t, err)
+	hashText := string(hash)
+	repo := newFakeAuthRepo()
+	repo.users["juan.perez"] = &auth.User{ID: "u1", Username: "juan.perez", PasswordHash: &hashText, Role: auth.RoleEmployee, MustChangePassword: true}
+	svc := NewAuthService(repo)
+
+	result, err := svc.Login(context.Background(), "juan.perez", "")
+
+	require.NoError(t, err)
+	require.True(t, result.MustChangePassword)
+	require.Empty(t, result.Token)
+}
+
+func TestSetPasswordWhenMustChangePassword(t *testing.T) {
+	hash, err := bcrypt.GenerateFromPassword([]byte("initial123"), bcrypt.DefaultCost)
+	require.NoError(t, err)
+	hashText := string(hash)
+	repo := newFakeAuthRepo()
+	repo.users["juan.perez"] = &auth.User{ID: "u1", Username: "juan.perez", PasswordHash: &hashText, Role: auth.RoleEmployee, MustChangePassword: true}
+	svc := NewAuthService(repo)
+
+	result, err := svc.SetPassword(context.Background(), "juan.perez", "newpassword123")
+
+	require.NoError(t, err)
+	require.NotEmpty(t, result.Token)
+	require.False(t, result.User.MustChangePassword)
+	require.False(t, result.User.NeedsPassword())
+	require.Len(t, repo.sessions, 1)
 }
 
 func TestLoginWithPasswordCreatesSession(t *testing.T) {
