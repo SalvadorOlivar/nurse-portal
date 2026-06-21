@@ -1,6 +1,6 @@
 package planificacion
 
-import "github.com/tuusuario/nursery-portal/internal/domain/employee"
+import "github.com/tuusuario/nurse-portal/internal/domain/employee"
 
 type DotacionItem struct {
 	TipoEmpleado   employee.Type

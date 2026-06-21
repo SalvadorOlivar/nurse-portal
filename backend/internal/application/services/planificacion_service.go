@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tuusuario/nursery-portal/internal/domain/ausencia"
-	"github.com/tuusuario/nursery-portal/internal/domain/planificacion"
-	"github.com/tuusuario/nursery-portal/internal/domain/turno"
-	"github.com/tuusuario/nursery-portal/internal/ports"
+	"github.com/tuusuario/nurse-portal/internal/domain/ausencia"
+	"github.com/tuusuario/nurse-portal/internal/domain/planificacion"
+	"github.com/tuusuario/nurse-portal/internal/domain/turno"
+	"github.com/tuusuario/nurse-portal/internal/ports"
 
-	cmdplanif "github.com/tuusuario/nursery-portal/internal/application/commands/planificacion"
-	cmdturno "github.com/tuusuario/nursery-portal/internal/application/commands/turno"
-	qryplanif "github.com/tuusuario/nursery-portal/internal/application/queries/planificacion"
+	cmdplanif "github.com/tuusuario/nurse-portal/internal/application/commands/planificacion"
+	cmdturno "github.com/tuusuario/nurse-portal/internal/application/commands/turno"
+	qryplanif "github.com/tuusuario/nurse-portal/internal/application/queries/planificacion"
 )
 
 type PlanificacionService struct {

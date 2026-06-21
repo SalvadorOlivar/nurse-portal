@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 
-	"github.com/tuusuario/nursery-portal/internal/domain/auth"
+	"github.com/tuusuario/nurse-portal/internal/domain/auth"
 )
 
 type authUserContextKey struct{}

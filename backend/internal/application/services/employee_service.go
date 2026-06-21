@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	domain "github.com/tuusuario/nursery-portal/internal/domain/employee"
-	"github.com/tuusuario/nursery-portal/internal/ports"
+	domain "github.com/tuusuario/nurse-portal/internal/domain/employee"
+	"github.com/tuusuario/nurse-portal/internal/ports"
 
-	cmd "github.com/tuusuario/nursery-portal/internal/application/commands/employee"
+	cmd "github.com/tuusuario/nurse-portal/internal/application/commands/employee"
 )
 
 type EmployeeService struct {

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tuusuario/nursery-portal/internal/domain/auth"
+	"github.com/tuusuario/nurse-portal/internal/domain/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 

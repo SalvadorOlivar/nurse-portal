@@ -12,16 +12,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
-	nurseryhttp "github.com/tuusuario/nursery-portal/internal/adapters/http"
-	"github.com/tuusuario/nursery-portal/internal/adapters/repository/postgres"
-	"github.com/tuusuario/nursery-portal/internal/application/services"
+	nursehttp "github.com/tuusuario/nurse-portal/internal/adapters/http"
+	"github.com/tuusuario/nurse-portal/internal/adapters/repository/postgres"
+	"github.com/tuusuario/nurse-portal/internal/application/services"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	// dbURL := getEnv("DATABASE_URL", "postgres://nursery:nursery_dev@localhost:5432/nursery_portal?sslmode=disable")
+	// dbURL := getEnv("DATABASE_URL", "postgres://nurse:nurse_dev@localhost:5432/nurse_portal?sslmode=disable")
 	dbURL := getEnv("DATABASE_URL", "postgresql://postgres:vUbnXYya9Wdjcb1A@db.zeiucxhkmxngysemqyrn.supabase.co:5432/postgres")
 	port := getEnv("PORT", "8080")
 
@@ -48,12 +48,12 @@ func main() {
 		slog.Error("failed to ensure admin user", "error", err)
 		os.Exit(1)
 	}
-	authHandler := nurseryhttp.NewAuthHandler(authSvc)
-	authMiddleware := nurseryhttp.NewAuthMiddleware(authSvc)
+	authHandler := nursehttp.NewAuthHandler(authSvc)
+	authMiddleware := nursehttp.NewAuthMiddleware(authSvc)
 
 	employeeRepo := postgres.NewEmployeeRepository(pool)
 	employeeSvc := services.NewEmployeeService(employeeRepo, authSvc)
-	employeeHandler := nurseryhttp.NewEmployeeHandler(employeeSvc)
+	employeeHandler := nursehttp.NewEmployeeHandler(employeeSvc)
 
 	planifRepo := postgres.NewPlanificacionRepository(pool)
 	turnoRepo := postgres.NewTurnoRepository(pool)
@@ -61,16 +61,16 @@ func main() {
 	leaveRepo := postgres.NewLeaveRequestRepository(pool)
 	compRepo := postgres.NewCompensatoryDayRepository(pool)
 	planifSvc := services.NewPlanificacionService(planifRepo, turnoRepo, dotacionRepo, dotacionRepo, employeeRepo, leaveRepo, compRepo)
-	planifHandler := nurseryhttp.NewPlanificacionHandler(planifSvc, employeeSvc)
+	planifHandler := nursehttp.NewPlanificacionHandler(planifSvc, employeeSvc)
 
 	ausenciaSvc := services.NewAusenciaService(leaveRepo, compRepo)
-	ausenciaHandler := nurseryhttp.NewAusenciaHandler(ausenciaSvc)
+	ausenciaHandler := nursehttp.NewAusenciaHandler(ausenciaSvc)
 
 	intercambioRepo := postgres.NewIntercambioRepository(pool)
 	intercambioSvc := services.NewIntercambioService(intercambioRepo, turnoRepo)
-	intercambioHandler := nurseryhttp.NewIntercambioHandler(intercambioSvc)
+	intercambioHandler := nursehttp.NewIntercambioHandler(intercambioSvc)
 
-	router := nurseryhttp.NewRouter(authHandler, authMiddleware, employeeHandler, planifHandler, ausenciaHandler, intercambioHandler)
+	router := nursehttp.NewRouter(authHandler, authMiddleware, employeeHandler, planifHandler, ausenciaHandler, intercambioHandler)
 
 	server := &http.Server{
 		Addr:         ":" + port,

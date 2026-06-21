@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/tuusuario/nursery-portal/internal/application/services"
-	"github.com/tuusuario/nursery-portal/internal/domain/auth"
+	"github.com/tuusuario/nurse-portal/internal/application/services"
+	"github.com/tuusuario/nurse-portal/internal/domain/auth"
 )
 
-const sessionCookieName = "nursery_session"
+const sessionCookieName = "nurse_session"
 
 type AuthHandler struct {
 	svc *services.AuthService

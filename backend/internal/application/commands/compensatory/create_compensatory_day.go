@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/tuusuario/nursery-portal/internal/domain/ausencia"
-	"github.com/tuusuario/nursery-portal/internal/ports"
+	"github.com/tuusuario/nurse-portal/internal/domain/ausencia"
+	"github.com/tuusuario/nurse-portal/internal/ports"
 )
 
 type CreateCompensatoryDayCommand struct {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/tuusuario/nursery-portal/internal/domain/turno"
+	"github.com/tuusuario/nurse-portal/internal/domain/turno"
 )
 
 type TurnoRepository struct {

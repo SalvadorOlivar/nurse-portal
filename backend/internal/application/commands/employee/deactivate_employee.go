@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tuusuario/nursery-portal/internal/ports"
+	"github.com/tuusuario/nurse-portal/internal/ports"
 )
 
 type DeactivateEmployeeCommand struct {

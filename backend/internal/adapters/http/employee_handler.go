@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	cmd "github.com/tuusuario/nursery-portal/internal/application/commands/employee"
-	"github.com/tuusuario/nursery-portal/internal/application/services"
-	"github.com/tuusuario/nursery-portal/internal/domain/auth"
-	"github.com/tuusuario/nursery-portal/internal/domain/employee"
+	cmd "github.com/tuusuario/nurse-portal/internal/application/commands/employee"
+	"github.com/tuusuario/nurse-portal/internal/application/services"
+	"github.com/tuusuario/nurse-portal/internal/domain/auth"
+	"github.com/tuusuario/nurse-portal/internal/domain/employee"
 )
 
 type EmployeeHandler struct {

@@ -12,9 +12,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/tuusuario/nursery-portal/internal/domain/auth"
-	"github.com/tuusuario/nursery-portal/internal/domain/employee"
-	"github.com/tuusuario/nursery-portal/internal/ports"
+	"github.com/tuusuario/nurse-portal/internal/domain/auth"
+	"github.com/tuusuario/nurse-portal/internal/domain/employee"
+	"github.com/tuusuario/nurse-portal/internal/ports"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/text/unicode/norm"
 )

@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/tuusuario/nursery-portal/internal/domain/auth"
-	"github.com/tuusuario/nursery-portal/internal/domain/ausencia"
-	"github.com/tuusuario/nursery-portal/internal/domain/employee"
-	"github.com/tuusuario/nursery-portal/internal/domain/intercambio"
-	"github.com/tuusuario/nursery-portal/internal/domain/planificacion"
-	"github.com/tuusuario/nursery-portal/internal/domain/turno"
+	"github.com/tuusuario/nurse-portal/internal/domain/auth"
+	"github.com/tuusuario/nurse-portal/internal/domain/ausencia"
+	"github.com/tuusuario/nurse-portal/internal/domain/employee"
+	"github.com/tuusuario/nurse-portal/internal/domain/intercambio"
+	"github.com/tuusuario/nurse-portal/internal/domain/planificacion"
+	"github.com/tuusuario/nurse-portal/internal/domain/turno"
 )
 
 type EmployeeRepository interface {

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tuusuario/nursery-portal/internal/domain/employee"
+	"github.com/tuusuario/nurse-portal/internal/domain/employee"
 )
 
 func TestParseType_Success(t *testing.T) {

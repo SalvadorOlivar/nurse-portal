@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/tuusuario/nursery-portal/internal/domain/ausencia"
-	cmdcomp "github.com/tuusuario/nursery-portal/internal/application/commands/compensatory"
-	cmdleave "github.com/tuusuario/nursery-portal/internal/application/commands/leave"
-	qrycomp "github.com/tuusuario/nursery-portal/internal/application/queries/compensatory"
-	qryleave "github.com/tuusuario/nursery-portal/internal/application/queries/leave"
-	"github.com/tuusuario/nursery-portal/internal/ports"
+	"github.com/tuusuario/nurse-portal/internal/domain/ausencia"
+	cmdcomp "github.com/tuusuario/nurse-portal/internal/application/commands/compensatory"
+	cmdleave "github.com/tuusuario/nurse-portal/internal/application/commands/leave"
+	qrycomp "github.com/tuusuario/nurse-portal/internal/application/queries/compensatory"
+	qryleave "github.com/tuusuario/nurse-portal/internal/application/queries/leave"
+	"github.com/tuusuario/nurse-portal/internal/ports"
 )
 
 type AusenciaService struct {

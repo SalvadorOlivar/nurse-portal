@@ -3,8 +3,8 @@ package employee
 import (
 	"context"
 
-	"github.com/tuusuario/nursery-portal/internal/domain/employee"
-	"github.com/tuusuario/nursery-portal/internal/ports"
+	"github.com/tuusuario/nurse-portal/internal/domain/employee"
+	"github.com/tuusuario/nurse-portal/internal/ports"
 )
 
 type CreateEmployeeCommand struct {

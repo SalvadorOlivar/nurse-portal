@@ -3,10 +3,10 @@ package services
 import (
 	"context"
 
-	"github.com/tuusuario/nursery-portal/internal/domain/intercambio"
-	cmdinter "github.com/tuusuario/nursery-portal/internal/application/commands/intercambio"
-	qryinter "github.com/tuusuario/nursery-portal/internal/application/queries/intercambio"
-	"github.com/tuusuario/nursery-portal/internal/ports"
+	"github.com/tuusuario/nurse-portal/internal/domain/intercambio"
+	cmdinter "github.com/tuusuario/nurse-portal/internal/application/commands/intercambio"
+	qryinter "github.com/tuusuario/nurse-portal/internal/application/queries/intercambio"
+	"github.com/tuusuario/nurse-portal/internal/ports"
 )
 
 type IntercambioService struct {

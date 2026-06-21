@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	cmdcomp "github.com/tuusuario/nursery-portal/internal/application/commands/compensatory"
-	cmdleave "github.com/tuusuario/nursery-portal/internal/application/commands/leave"
-	"github.com/tuusuario/nursery-portal/internal/application/services"
-	"github.com/tuusuario/nursery-portal/internal/domain/ausencia"
+	cmdcomp "github.com/tuusuario/nurse-portal/internal/application/commands/compensatory"
+	cmdleave "github.com/tuusuario/nurse-portal/internal/application/commands/leave"
+	"github.com/tuusuario/nurse-portal/internal/application/services"
+	"github.com/tuusuario/nurse-portal/internal/domain/ausencia"
 )
 
 type AusenciaHandler struct {

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nursery Portal",
+  title: "Nurse Portal",
   description: "Sistema de gestión de turnos para personal de enfermería",
 };
 

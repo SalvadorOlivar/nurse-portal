@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	cmdinter "github.com/tuusuario/nursery-portal/internal/application/commands/intercambio"
-	"github.com/tuusuario/nursery-portal/internal/application/services"
-	"github.com/tuusuario/nursery-portal/internal/domain/intercambio"
+	cmdinter "github.com/tuusuario/nurse-portal/internal/application/commands/intercambio"
+	"github.com/tuusuario/nurse-portal/internal/application/services"
+	"github.com/tuusuario/nurse-portal/internal/domain/intercambio"
 )
 
 type IntercambioHandler struct {

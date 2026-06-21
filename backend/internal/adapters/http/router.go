@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/tuusuario/nursery-portal/internal/domain/auth"
+	"github.com/tuusuario/nurse-portal/internal/domain/auth"
 )
 
 func NewRouter(authHandler *AuthHandler, authMiddleware *AuthMiddleware, employeeHandler *EmployeeHandler, planificacionHandler *PlanificacionHandler, ausenciaHandler *AusenciaHandler, intercambioHandler *IntercambioHandler) *chi.Mux {

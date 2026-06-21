@@ -1,4 +1,4 @@
-module github.com/tuusuario/nursery-portal
+module github.com/tuusuario/nurse-portal
 
 go 1.26.2
 

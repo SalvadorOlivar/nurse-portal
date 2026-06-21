@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/tuusuario/nursery-portal/internal/domain/auth"
+	"github.com/tuusuario/nurse-portal/internal/domain/auth"
 )
 
 type AuthRepository struct {

@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	cmdplanif "github.com/tuusuario/nursery-portal/internal/application/commands/planificacion"
-	cmdturno "github.com/tuusuario/nursery-portal/internal/application/commands/turno"
-	qryplanif "github.com/tuusuario/nursery-portal/internal/application/queries/planificacion"
-	"github.com/tuusuario/nursery-portal/internal/application/services"
-	"github.com/tuusuario/nursery-portal/internal/domain/employee"
-	"github.com/tuusuario/nursery-portal/internal/domain/planificacion"
-	"github.com/tuusuario/nursery-portal/internal/domain/turno"
+	cmdplanif "github.com/tuusuario/nurse-portal/internal/application/commands/planificacion"
+	cmdturno "github.com/tuusuario/nurse-portal/internal/application/commands/turno"
+	qryplanif "github.com/tuusuario/nurse-portal/internal/application/queries/planificacion"
+	"github.com/tuusuario/nurse-portal/internal/application/services"
+	"github.com/tuusuario/nurse-portal/internal/domain/employee"
+	"github.com/tuusuario/nurse-portal/internal/domain/planificacion"
+	"github.com/tuusuario/nurse-portal/internal/domain/turno"
 )
 
 type PlanificacionHandler struct {

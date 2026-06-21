@@ -3,8 +3,8 @@ package http
 import (
 	"net/http"
 
-	"github.com/tuusuario/nursery-portal/internal/application/services"
-	"github.com/tuusuario/nursery-portal/internal/domain/auth"
+	"github.com/tuusuario/nurse-portal/internal/application/services"
+	"github.com/tuusuario/nurse-portal/internal/domain/auth"
 )
 
 type AuthMiddleware struct {
