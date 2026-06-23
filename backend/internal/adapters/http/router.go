@@ -35,7 +35,7 @@ func NewRouter(authHandler *AuthHandler, authMiddleware *AuthMiddleware, employe
 		r.Route("/employees", func(r chi.Router) {
 			r.Use(authMiddleware.RequireAuth)
 			r.With(authMiddleware.RequireRoles(auth.RoleAdmin)).Post("/", employeeHandler.Create)
-			r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor)).Get("/", employeeHandler.List)
+			r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor, auth.RoleEmployee)).Get("/", employeeHandler.List)
 			r.Route("/{id}", func(r chi.Router) {
 				r.With(authMiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSupervisor, auth.RoleEmployee)).Get("/", employeeHandler.GetByID)
 				r.With(authMiddleware.RequireRoles(auth.RoleAdmin)).Put("/", employeeHandler.Update)

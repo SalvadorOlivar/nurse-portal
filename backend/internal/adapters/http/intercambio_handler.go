@@ -102,7 +102,12 @@ func (h *IntercambioHandler) AcceptSwapRequest(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if err := h.svc.AcceptSwapRequest(r.Context(), id, user.ID); err != nil {
+	if user.EmployeeID == nil {
+		writeError(w, http.StatusForbidden, "user must be linked to an employee")
+		return
+	}
+
+	if err := h.svc.AcceptSwapRequest(r.Context(), id, *user.EmployeeID); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -118,7 +123,12 @@ func (h *IntercambioHandler) RejectSwapRequest(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if err := h.svc.RejectSwapRequest(r.Context(), id, user.ID); err != nil {
+	if user.EmployeeID == nil {
+		writeError(w, http.StatusForbidden, "user must be linked to an employee")
+		return
+	}
+
+	if err := h.svc.RejectSwapRequest(r.Context(), id, *user.EmployeeID); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -150,7 +160,12 @@ func (h *IntercambioHandler) CancelSwapRequest(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if err := h.svc.CancelSwapRequest(r.Context(), id, user.ID); err != nil {
+	if user.EmployeeID == nil {
+		writeError(w, http.StatusForbidden, "user must be linked to an employee")
+		return
+	}
+
+	if err := h.svc.CancelSwapRequest(r.Context(), id, *user.EmployeeID); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}

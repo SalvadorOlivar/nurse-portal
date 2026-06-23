@@ -30,7 +30,7 @@ export function SwapRequestForm() {
   const router = useRouter()
   const { data: meData } = useMe()
   const { data: planificacionesData } = usePlanificaciones()
-  const { data: employeesData } = useEmployees()
+  const { data: employeesData, isPending: loadingEmployees, error: employeesError } = useEmployees()
   const createMutation = useCreateSwapRequest()
 
   const [selectedPlanifID, setSelectedPlanifID] = useState('')
@@ -136,18 +136,38 @@ export function SwapRequestForm() {
 
               <div className="space-y-2">
                 <Label>Empleado destino</Label>
-                <Select value={destinoID} onValueChange={(v) => v && (setDestinoID(v), setTurnoDestinoID(''))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar empleado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {otherEmployees.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.apellido}, {e.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {loadingEmployees ? (
+                  <p className="text-sm text-muted-foreground">Cargando empleados...</p>
+                ) : employeesError ? (
+                  <p className="text-sm text-destructive">
+                    Error al cargar empleados: {employeesError.message}
+                  </p>
+                ) : employees.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No hay empleados registrados</p>
+                ) : !currentEmployee ? (
+                  <p className="text-sm text-destructive">
+                    No se encontró tu empleado vinculado. Contacta al administrador.
+                  </p>
+                ) : (
+                  <Select value={destinoID} onValueChange={(v) => v && (setDestinoID(v), setTurnoDestinoID(''))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar empleado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {otherEmployees.length === 0 ? (
+                        <SelectItem value="__none__" disabled>
+                          No hay empleados activos de tipo {currentEmployee.tipo}
+                        </SelectItem>
+                      ) : (
+                        otherEmployees.map((e) => (
+                          <SelectItem key={e.id} value={e.id}>
+                            {e.apellido}, {e.nombre}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {destinoID && (
