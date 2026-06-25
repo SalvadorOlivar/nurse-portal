@@ -1,132 +1,91 @@
 'use client'
 
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { usePlanificaciones, useDeletePlanificacion } from '@/features/planificaciones/hooks/use-planificaciones'
-import { toast } from 'sonner'
-import type { Planificacion } from '@/types/planificacion'
+import { CalendarPlus, CheckCircle2 } from 'lucide-react'
+import { EmptyState, PageHeader, StatusBadge } from '@/components/hospital/hospital-ui'
 import { useMe } from '@/features/auth/hooks/use-auth'
-
-const estadoColors: Record<string, 'default' | 'secondary' | 'outline'> = {
-  BORRADOR: 'secondary',
-  PUBLICADO: 'default',
-  CERRADO: 'outline',
-}
-
-const estadoLabels: Record<string, string> = {
-  BORRADOR: 'Borrador',
-  PUBLICADO: 'Publicado',
-  CERRADO: 'Cerrado',
-}
-
-function PlanificacionRow({ planificacion, canEdit }: { planificacion: Planificacion; canEdit: boolean }) {
-  const deleteMutation = useDeletePlanificacion()
-
-  async function handleDelete() {
-    if (!confirm('¿Eliminar esta planificación? Se borrarán todos los turnos asociados.')) return
-    try {
-      await deleteMutation.mutateAsync(planificacion.id)
-      toast.success('Planificación eliminada')
-    } catch {
-      toast.error('Error al eliminar planificación')
-    }
-  }
-
-  return (
-    <TableRow>
-      <TableCell className="font-medium">{planificacion.nombre}</TableCell>
-      <TableCell>Semana {planificacion.semana} de {planificacion.anio}</TableCell>
-      <TableCell>{planificacion.dias} días</TableCell>
-      <TableCell>
-        <Badge variant={estadoColors[planificacion.estado] ?? 'secondary'}>
-          {estadoLabels[planificacion.estado] ?? planificacion.estado}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="flex justify-end gap-2">
-          <Link href={`/planificaciones/${planificacion.id}`}>
-            <Button variant="outline" size="sm">Ver</Button>
-          </Link>
-          {canEdit && planificacion.estado === 'BORRADOR' && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-destructive"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-            >
-              Eliminar
-            </Button>
-          )}
-        </div>
-      </TableCell>
-    </TableRow>
-  )
-}
+import { usePlanificaciones } from '@/features/planificaciones/hooks/use-planificaciones'
 
 export function PlanificacionList() {
-  const { data, isLoading, isError } = usePlanificaciones()
+  const { data: plansData, isLoading, isError } = usePlanificaciones()
   const { data: meData } = useMe()
+
+  const plans = plansData?.data ?? []
   const canEdit = meData?.user.role === 'ADMIN' || meData?.user.role === 'SUPERVISOR'
 
   if (isLoading) {
-    return <div className="text-center py-8 text-muted-foreground">Cargando planificaciones...</div>
+    return <div className="np-empty">Cargando planificaciones...</div>
   }
 
   if (isError) {
-    return (
-      <div className="text-center py-8 text-destructive">
-        Error al cargar planificaciones. Verifica que el servidor esté corriendo.
-      </div>
-    )
+    return <div className="np-empty text-[var(--danger)]">Error al cargar planificaciones. Verifica que el servidor este corriendo.</div>
   }
 
-  const plans = data?.data ?? []
-
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Planificaciones</CardTitle>
-        {canEdit && (
-          <Link href="/planificaciones/new">
-            <Button>Nueva planificación</Button>
-          </Link>
-        )}
-      </CardHeader>
-      <CardContent>
-        {plans.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No hay planificaciones. Crea la primera.
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Período</TableHead>
-                <TableHead>Días</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {plans.map((plan) => (
-                <PlanificacionRow key={plan.id} planificacion={plan} canEdit={canEdit} />
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+    <div className="np-page">
+      <PageHeader
+        title="Planificaciones"
+        subtitle="Gestiona las planificaciones semanales del personal."
+        actions={
+          <>
+            <StatusBadge tone={plans.some((plan) => plan.estado === 'PUBLICADO') ? 'success' : 'warn'}>
+              <CheckCircle2 className="size-3.5" />
+              {plans.some((plan) => plan.estado === 'PUBLICADO') ? 'Semana publicada' : 'Sin publicacion'}
+            </StatusBadge>
+            {canEdit && (
+              <Link href="/planificaciones/new" className="np-btn np-btn-primary">
+                <CalendarPlus className="size-4" />
+                <span className="np-action-text">Nueva planificacion</span>
+              </Link>
+            )}
+          </>
+        }
+      />
+
+      <section className="np-card overflow-hidden">
+        <div className="np-card-body">
+          {plans.length === 0 ? (
+            <EmptyState>No hay planificaciones configuradas.</EmptyState>
+          ) : (
+            <div className="np-table-wrap">
+              <table className="np-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Periodo</th>
+                    <th>Dias</th>
+                    <th>Estado</th>
+                    <th className="text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plans.map((plan) => (
+                    <tr key={plan.id}>
+                      <td className="font-[510]">{plan.nombre}</td>
+                      <td>
+                        Semana {plan.semana} de {plan.anio}
+                      </td>
+                      <td>{plan.dias}</td>
+                      <td>
+                        <StatusBadge tone={plan.estado === 'PUBLICADO' ? 'success' : plan.estado === 'CERRADO' ? 'accent' : 'warn'}>
+                          {plan.estado === 'PUBLICADO' ? 'Publicado' : plan.estado === 'CERRADO' ? 'Cerrado' : 'Borrador'}
+                        </StatusBadge>
+                      </td>
+                      <td>
+                        <div className="flex justify-end gap-2">
+                          <Link href={`/planificaciones/${plan.id}`} className="np-btn np-btn-sm">
+                            Ver planilla
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
   )
 }

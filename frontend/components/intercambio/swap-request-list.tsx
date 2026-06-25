@@ -1,245 +1,195 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
-import {
-  useSwapRequests,
-  useAcceptSwapRequest,
-  useRejectSwapRequest,
-  useApproveSwapRequest,
-  useCancelSwapRequest,
-  useSwapHistory,
-} from '@/features/intercambio/hooks/use-intercambio'
+import { ArrowRight, Check, Clock3, Plus, X } from 'lucide-react'
+import { toast } from 'sonner'
+import { Card, EmptyState, PageHeader, StatsGrid, StatusBadge, fullName } from '@/components/hospital/hospital-ui'
 import { useMe } from '@/features/auth/hooks/use-auth'
 import { useEmployees } from '@/features/employees/hooks/use-employees'
-import { usePlanificaciones } from '@/features/planificaciones/hooks/use-planificaciones'
-import { toast } from 'sonner'
+import {
+  useAcceptSwapRequest,
+  useApproveSwapRequest,
+  useRejectSwapRequest,
+  useSwapRequests,
+} from '@/features/intercambio/hooks/use-intercambio'
 import type { ShiftSwapRequest } from '@/types/intercambio'
 
-const estadoLabels: Record<string, string> = {
-  PENDIENTE_RESPUESTA: 'Esperando respuesta',
-  PENDIENTE_APROBACION: 'Esperando aprobación',
+const statusLabels: Record<string, string> = {
+  PENDIENTE_RESPUESTA: 'Pendiente',
+  PENDIENTE_APROBACION: 'Pendiente',
   APROBADO: 'Aprobado',
   RECHAZADO: 'Rechazado',
   CANCELADO: 'Cancelado',
 }
 
-const estadoColors: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-  PENDIENTE_RESPUESTA: 'secondary',
-  PENDIENTE_APROBACION: 'secondary',
-  APROBADO: 'default',
-  RECHAZADO: 'destructive',
-  CANCELADO: 'outline',
-}
-
-function HistoryDialog({ swapId, open, onOpenChange }: { swapId: string; open: boolean; onOpenChange: (v: boolean) => void }) {
-  const { data, isLoading } = useSwapHistory(swapId)
-
-  const accionLabels: Record<string, string> = {
-    SOLICITADO: 'Solicitado',
-    ACEPTADO: 'Aceptado por destino',
-    RECHAZADO: 'Rechazado',
-    APROBADO: 'Aprobado por supervisor',
-    CANCELADO: 'Cancelado',
-    EJECUTADO: 'Swap ejecutado',
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Historial del intercambio</DialogTitle>
-          <DialogDescription>Secuencia de eventos del intercambio de turnos</DialogDescription>
-        </DialogHeader>
-        {isLoading ? (
-          <div className="text-sm text-muted-foreground">Cargando historial...</div>
-        ) : (
-          <div className="space-y-2">
-            {data?.data?.map((entry) => (
-              <div key={entry.id} className="flex items-center gap-2 text-sm">
-                <Badge variant="outline">{accionLabels[entry.accion] ?? entry.accion}</Badge>
-                <span className="text-muted-foreground">
-                  {new Date(entry.created_at).toLocaleString('es-AR')}
-                </span>
-              </div>
-            ))}
-            {!data?.data?.length && (
-              <div className="text-sm text-muted-foreground">Sin historial disponible.</div>
-            )}
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function SwapRequestRow({ req, canApprove }: { req: ShiftSwapRequest; canApprove: boolean }) {
-  const [historyOpen, setHistoryOpen] = useState(false)
-  const { data: meData } = useMe()
-  const { data: employeesData } = useEmployees()
-  const { data: planifData } = usePlanificaciones()
-  const acceptMutation = useAcceptSwapRequest()
-  const rejectMutation = useRejectSwapRequest()
-  const approveMutation = useApproveSwapRequest()
-  const cancelMutation = useCancelSwapRequest()
-
-  const employees = employeesData?.data ?? []
-  const solicitante = employees.find((e) => e.id === req.solicitante_id)
-  const destino = employees.find((e) => e.id === req.destino_id)
-  const planif = planifData?.data?.find((p) => p.id === req.planificacion_id)
-
-  const userEmployeeID = meData?.user?.employee_id
-  const isDestino = userEmployeeID === req.destino_id
-  const isSolicitante = userEmployeeID === req.solicitante_id
-
-  async function handleAccept() {
-    try {
-      await acceptMutation.mutateAsync(req.id)
-      toast.success('Intercambio aceptado')
-    } catch { toast.error('Error al aceptar') }
-  }
-
-  async function handleReject() {
-    try {
-      await rejectMutation.mutateAsync(req.id)
-      toast.success('Intercambio rechazado')
-    } catch { toast.error('Error al rechazar') }
-  }
-
-  async function handleApprove() {
-    try {
-      await approveMutation.mutateAsync(req.id)
-      toast.success('Intercambio aprobado')
-    } catch { toast.error('Error al aprobar') }
-  }
-
-  async function handleCancel() {
-    try {
-      await cancelMutation.mutateAsync(req.id)
-      toast.success('Intercambio cancelado')
-    } catch { toast.error('Error al cancelar') }
-  }
-
-  return (
-    <>
-      <TableRow>
-        <TableCell className="font-medium">
-          {solicitante ? `${solicitante.apellido}, ${solicitante.nombre}` : req.solicitante_id}
-        </TableCell>
-        <TableCell>
-          {destino ? `${destino.apellido}, ${destino.nombre}` : req.destino_id}
-        </TableCell>
-        <TableCell className="text-xs text-muted-foreground">
-          {planif?.nombre ?? req.planificacion_id}
-        </TableCell>
-        <TableCell>
-          <Badge variant={estadoColors[req.estado] ?? 'secondary'}>
-            {estadoLabels[req.estado] ?? req.estado}
-          </Badge>
-        </TableCell>
-        <TableCell className="text-right">
-          <div className="flex justify-end gap-1 flex-wrap">
-            {isDestino && req.estado === 'PENDIENTE_RESPUESTA' && (
-              <>
-                <Button variant="outline" size="sm" className="text-green-600" onClick={handleAccept} disabled={acceptMutation.isPending}>
-                  Aceptar
-                </Button>
-                <Button variant="outline" size="sm" className="text-destructive" onClick={handleReject} disabled={rejectMutation.isPending}>
-                  Rechazar
-                </Button>
-              </>
-            )}
-            {canApprove && req.estado === 'PENDIENTE_APROBACION' && (
-              <>
-                <Button variant="outline" size="sm" className="text-green-600" onClick={handleApprove} disabled={approveMutation.isPending}>
-                  Aprobar
-                </Button>
-                <Button variant="outline" size="sm" className="text-destructive" onClick={handleReject} disabled={rejectMutation.isPending}>
-                  Rechazar
-                </Button>
-              </>
-            )}
-            {isSolicitante && (req.estado === 'PENDIENTE_RESPUESTA' || req.estado === 'PENDIENTE_APROBACION') && (
-              <Button variant="outline" size="sm" onClick={handleCancel} disabled={cancelMutation.isPending}>
-                Cancelar
-              </Button>
-            )}
-            <Button variant="ghost" size="sm" onClick={() => setHistoryOpen(true)}>
-              Historial
-            </Button>
-          </div>
-        </TableCell>
-      </TableRow>
-      <HistoryDialog swapId={req.id} open={historyOpen} onOpenChange={setHistoryOpen} />
-    </>
-  )
+function statusTone(status: string) {
+  if (status === 'APROBADO') return 'success' as const
+  if (status === 'RECHAZADO' || status === 'CANCELADO') return 'danger' as const
+  return 'warn' as const
 }
 
 export function SwapRequestList() {
   const { data: meData } = useMe()
   const { data, isLoading, isError } = useSwapRequests()
+  const { data: employeesData } = useEmployees()
   const canApprove = meData?.user.role === 'ADMIN' || meData?.user.role === 'SUPERVISOR'
+  const requests = data?.data ?? []
+  const employees = employeesData?.data ?? []
+  const today = new Date().toISOString().slice(0, 10)
+  const currentMonth = today.slice(0, 7)
+  const pending = requests.filter((req) => req.estado === 'PENDIENTE_RESPUESTA' || req.estado === 'PENDIENTE_APROBACION')
+  const completed = requests.filter((req) => req.estado === 'APROBADO')
 
   if (isLoading) {
-    return <div className="text-center py-8 text-muted-foreground">Cargando solicitudes de intercambio...</div>
+    return <div className="np-empty">Cargando solicitudes de intercambio...</div>
   }
 
   if (isError) {
-    return <div className="text-center py-8 text-destructive">Error al cargar solicitudes de intercambio.</div>
+    return <div className="np-empty text-[var(--danger)]">Error al cargar solicitudes de intercambio.</div>
   }
 
-  const requests = data?.data ?? []
+  return (
+    <div className="np-page">
+      <PageHeader
+        title="Intercambios de turnos"
+        subtitle="Solicitudes entre funcionarios con revision de supervision."
+        actions={
+          <Link href="/intercambio/new" className="np-btn np-btn-primary">
+            <Plus className="size-4" />
+            <span className="np-action-text">Solicitar intercambio</span>
+          </Link>
+        }
+      />
+
+      <StatsGrid
+        items={[
+          { label: 'Solicitudes activas', value: pending.length, highlight: true },
+          { label: 'Pendientes de aprobacion', value: requests.filter((req) => req.estado === 'PENDIENTE_APROBACION').length },
+          { label: 'Completados hoy', value: completed.filter((req) => req.updated_at?.slice(0, 10) === today).length },
+          { label: 'Historial mes', value: requests.filter((req) => req.created_at?.slice(0, 7) === currentMonth).length },
+        ]}
+      />
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="space-y-3">
+          {requests.length === 0 ? (
+            <Card>
+              <EmptyState>No hay solicitudes de intercambio.</EmptyState>
+            </Card>
+          ) : (
+            requests.map((request) => (
+              <SwapCard key={request.id} request={request} employees={employees} canApprove={canApprove} />
+            ))
+          )}
+        </section>
+
+        <Card title="Historial completado">
+          {completed.length === 0 ? (
+            <EmptyState>Sin intercambios completados.</EmptyState>
+          ) : (
+            <ol className="space-y-4">
+              {completed.slice(0, 6).map((request) => {
+                const employee = employees.find((item) => item.id === request.solicitante_id)
+                return (
+                  <li key={request.id} className="relative border-l border-[var(--border)] pl-4">
+                    <span className="absolute -left-[5px] top-1 size-2.5 rounded-full bg-[var(--success)]" />
+                    <div className="text-sm font-[510]">{fullName(employee)}</div>
+                    <div className="text-[0.78rem] text-[var(--muted-foreground)]">{new Date(request.updated_at).toLocaleString('es-UY')}</div>
+                  </li>
+                )
+              })}
+            </ol>
+          )}
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+function SwapCard({
+  request,
+  employees,
+  canApprove,
+}: {
+  request: ShiftSwapRequest
+  employees: { id: string; nombre: string; apellido: string }[]
+  canApprove: boolean
+}) {
+  const acceptMutation = useAcceptSwapRequest()
+  const approveMutation = useApproveSwapRequest()
+  const rejectMutation = useRejectSwapRequest()
+  const solicitante = employees.find((employee) => employee.id === request.solicitante_id)
+  const destino = employees.find((employee) => employee.id === request.destino_id)
+  const isPending = request.estado === 'PENDIENTE_RESPUESTA' || request.estado === 'PENDIENTE_APROBACION'
+
+  async function handleApprove() {
+    try {
+      if (request.estado === 'PENDIENTE_APROBACION' && canApprove) {
+        await approveMutation.mutateAsync(request.id)
+      } else {
+        await acceptMutation.mutateAsync(request.id)
+      }
+      toast.success('Intercambio aprobado')
+    } catch {
+      toast.error('Error al aprobar intercambio')
+    }
+  }
+
+  async function handleReject() {
+    try {
+      await rejectMutation.mutateAsync(request.id)
+      toast.success('Intercambio rechazado')
+    } catch {
+      toast.error('Error al rechazar intercambio')
+    }
+  }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Intercambio de Turnos</CardTitle>
-        <Link href="/intercambio/new">
-          <Button>Nuevo intercambio</Button>
-        </Link>
-      </CardHeader>
-      <CardContent>
-        {requests.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No hay solicitudes de intercambio.
+    <article className="np-card">
+      <div className="np-card-body">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div>
+                <div className="text-sm font-[510]">{fullName(solicitante)}</div>
+                <div className="text-[0.78rem] text-[var(--muted-foreground)]">Solicitante</div>
+              </div>
+              <ArrowRight className="size-4 text-[var(--muted-foreground)]" />
+              <div>
+                <div className="text-sm font-[510]">{fullName(destino)}</div>
+                <div className="text-[0.78rem] text-[var(--muted-foreground)]">Receptor</div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="np-badge">Origen {request.turno_solicitante_id.slice(0, 8)}</span>
+              <ArrowRight className="size-4 text-[var(--muted-foreground)]" />
+              <span className="np-badge">Destino {request.turno_destino_id.slice(0, 8)}</span>
+            </div>
+
+            <div className="flex items-center gap-2 text-[0.8rem] text-[var(--muted-foreground)]">
+              <Clock3 className="size-4" />
+              {new Date(request.created_at).toLocaleDateString('es-UY')}
+            </div>
           </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Solicitante</TableHead>
-                <TableHead>Destino</TableHead>
-                <TableHead>Planificación</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {requests.map((req) => (
-                <SwapRequestRow key={req.id} req={req} canApprove={canApprove} />
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+
+          <div className="flex flex-col items-end gap-3">
+            <StatusBadge tone={statusTone(request.estado)}>{statusLabels[request.estado] ?? request.estado}</StatusBadge>
+            {isPending && (
+              <div className="flex gap-2">
+                <button type="button" className="np-btn np-btn-sm" onClick={handleApprove} disabled={acceptMutation.isPending || approveMutation.isPending}>
+                  <Check className="size-4 text-[var(--success)]" />
+                  <span className="np-action-text">Aprobar</span>
+                </button>
+                <button type="button" className="np-btn np-btn-sm" onClick={handleReject} disabled={rejectMutation.isPending}>
+                  <X className="size-4 text-[var(--danger)]" />
+                  <span className="np-action-text">Rechazar</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -14,6 +14,15 @@ import { SectorManager } from './sector-manager'
 import { toast } from 'sonner'
 import type { PlanificacionDetail } from '@/types/planificacion'
 import { useMe } from '@/features/auth/hooks/use-auth'
+
+const monthsEs = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+
+function isoWeekToDate(anio: number, semana: number, diaSemana: number): Date {
+  const jan4 = new Date(anio, 0, 4)
+  const daysSinceMonday = jan4.getDay() === 0 ? 6 : jan4.getDay() - 1
+  const mondayWeek1 = new Date(anio, 0, 4 - daysSinceMonday)
+  return new Date(anio, 0, mondayWeek1.getDate() + (semana - 1) * 7 + (diaSemana - 1))
+}
 
 const estadoColors: Record<string, 'default' | 'secondary' | 'outline'> = {
   BORRADOR: 'secondary',
@@ -33,6 +42,13 @@ export function PlanificacionCalendario({ planificacionId }: CalendarioProps) {
 
   const [vista, setVista] = useState<'planilla' | 'configuracion'>('planilla')
 
+  const dateRangeStr = useMemo(() => {
+    if (!planifData) return ''
+    const start = isoWeekToDate(planifData.anio, planifData.semana, 1)
+    const end = isoWeekToDate(planifData.anio, planifData.semana, 7)
+    return `Semana del ${start.getDate()} al ${end.getDate()} de ${monthsEs[end.getMonth()]} de ${end.getFullYear()}`
+  }, [planifData])
+
   if (planifLoading) {
     return <div className="text-center py-8 text-muted-foreground">Cargando planificación...</div>
   }
@@ -42,8 +58,6 @@ export function PlanificacionCalendario({ planificacionId }: CalendarioProps) {
   }
 
   const planificacion: PlanificacionDetail = planifData
-  const employees = planificacion.employees ?? []
-  const activeEmployees = employees.filter((e) => e.activo)
   const canEdit = meData?.user.role === 'ADMIN' || meData?.user.role === 'SUPERVISOR'
   const readonly = !canEdit || planificacion.estado !== 'BORRADOR'
 
@@ -76,7 +90,7 @@ export function PlanificacionCalendario({ planificacionId }: CalendarioProps) {
                planificacion.estado === 'PUBLICADO' ? 'Publicado' : 'Cerrado'}
             </Badge>
             <span className="text-sm text-muted-foreground">
-              {activeEmployees.length} empleados activos · 7 días
+              {dateRangeStr} &middot; {planificacion.nombre}
             </span>
           </div>
         </div>

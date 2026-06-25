@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ausenciaApi } from '@/lib/api/ausencia'
-import type { CreateLeaveRequestPayload } from '@/types/ausencia'
+import type { CreateCompensatoryDayPayload, CreateLeaveRequestPayload } from '@/types/ausencia'
 
 export const LEAVE_REQUESTS_KEY = ['leave-requests'] as const
 export const COMPENSATORY_DAYS_KEY = ['compensatory-days'] as const
@@ -68,7 +68,7 @@ export function useCreateCompensatoryDay() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: any) => ausenciaApi.compensatoryDays.create(payload),
+    mutationFn: (payload: CreateCompensatoryDayPayload) => ausenciaApi.compensatoryDays.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COMPENSATORY_DAYS_KEY })
     },

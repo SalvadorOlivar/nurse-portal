@@ -1,13 +1,6 @@
 'use client'
 
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '@/components/ui/select'
 import { usePlanificacion, useSectores, useCreateTurno, useDeleteTurno, usePlanLeaves } from '@/features/planificaciones/hooks/use-planificaciones'
 import type { Turno, TipoTurno } from '@/types/planificacion'
 import type { Employee } from '@/types/employee'
@@ -20,6 +13,13 @@ const tipoLabels: Record<string, string> = {
   AUXILIAR_SERVICIO: 'Auxiliar de Servicio',
 }
 
+const tipoShortLabels: Record<string, string> = {
+  SUPERVISOR: 'SUP',
+  NURSE: 'ENF',
+  NURSE_ASSISTANT: 'AUX',
+  AUXILIAR_SERVICIO: 'APO',
+}
+
 const turnoLabels: Record<string, string> = {
   MANANA: 'Mañana',
   TARDE: 'Tarde',
@@ -27,49 +27,41 @@ const turnoLabels: Record<string, string> = {
   NOCHE: 'Noche',
 }
 
-const turnoColors: Record<string, string> = {
-  MANANA: 'bg-blue-50 border-blue-200',
-  TARDE: 'bg-yellow-50 border-yellow-200',
-  VESPERTINO: 'bg-orange-50 border-orange-200',
-  NOCHE: 'bg-indigo-50 border-indigo-200',
-}
-
-const turnoBadgeColors: Record<string, string> = {
-  MANANA: 'bg-blue-200 text-blue-900',
-  TARDE: 'bg-yellow-200 text-yellow-900',
-  VESPERTINO: 'bg-orange-200 text-orange-900',
-  NOCHE: 'bg-indigo-300 text-indigo-950',
+const turnoTime: Record<string, string> = {
+  MANANA: '06:00-14:00',
+  TARDE: '14:00-22:00',
+  VESPERTINO: '22:00-06:00',
+  NOCHE: '22:00-06:00',
 }
 
 const tipoOrden = ['SUPERVISOR', 'NURSE', 'NURSE_ASSISTANT', 'AUXILIAR_SERVICIO']
 const turnosOrden: TipoTurno[] = ['MANANA', 'TARDE', 'VESPERTINO', 'NOCHE']
+const tiposPorSector = ['NURSE', 'NURSE_ASSISTANT'] as const
 const emptyTurnos: Turno[] = []
 const emptyEmployees: Employee[] = []
 const emptySectores: { id: string; nombre: string }[] = []
 const emptyLeaves: LeaveRequest[] = []
 
-const leaveTypeLabels: Record<string, string> = {
-  VACACIONES: 'Vac',
-  ENFERMEDAD: 'Lic',
-  PERSONAL: 'Pers',
-  DIA_FAVOR: 'Día F',
+const diaShortLabels: Record<number, string> = {
+  1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom',
 }
 
-const diaLabels: Record<number, string> = {
-  1: 'Lunes',
-  2: 'Martes',
-  3: 'Miércoles',
-  4: 'Jueves',
-  5: 'Viernes',
-  6: 'Sábado',
-  7: 'Domingo',
-}
+const monthsEs = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 
 function isoWeekToDate(anio: number, semana: number, diaSemana: number): Date {
   const jan4 = new Date(anio, 0, 4)
   const daysSinceMonday = jan4.getDay() === 0 ? 6 : jan4.getDay() - 1
   const mondayWeek1 = new Date(anio, 0, 4 - daysSinceMonday)
   return new Date(anio, 0, mondayWeek1.getDate() + (semana - 1) * 7 + (diaSemana - 1))
+}
+
+function initials(nombre?: string, apellido?: string): string {
+  return ((nombre?.[0] ?? '') + (apellido?.[0] ?? '')).toUpperCase() || '??'
+}
+
+function fullName(emp?: { nombre?: string; apellido?: string } | null): string {
+  if (!emp) return 'Sin empleado'
+  return `${emp.apellido ?? ''}, ${emp.nombre ?? ''}`.replace(/^,\s/, '').replace(/,\s$/, '') || 'Sin nombre'
 }
 
 interface PlanillaDiariaProps {
@@ -131,10 +123,22 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
   const employees = planifData?.employees ?? emptyEmployees
   const activeEmployees = employees.filter((e) => e.activo)
   const turnos = planifData?.turnos ?? emptyTurnos
-
   const planif = planifData
 
   const leaves = leavesData?.data ?? emptyLeaves
+
+  const weekDates = useMemo(() => {
+    if (!planif) return []
+    return [1, 2, 3, 4, 5, 6, 7].map((d) => isoWeekToDate(planif.anio, planif.semana, d))
+  }, [planif])
+
+  const dateRangeStr = useMemo(() => {
+    if (weekDates.length < 7) return ''
+    const start = weekDates[0]
+    const end = weekDates[6]
+    return `Semana del ${start.getDate()} al ${end.getDate()} de ${monthsEs[end.getMonth()]} de ${end.getFullYear()}`
+  }, [weekDates])
+
   const empleadosConLicencia = useMemo(() => {
     const set = new Set<string>()
     if (!planif) return set
@@ -176,23 +180,6 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
     return map
   }, [activeEmployees])
 
-  const turnosPorTipoYTurno = useMemo(() => {
-    const map: Record<string, Record<string, Turno[]>> = {}
-    for (const tipo of tipoOrden) {
-      map[tipo] = {}
-      for (const turno of turnosOrden) {
-        map[tipo][turno] = []
-      }
-    }
-    for (const t of turnosDelDia) {
-      const emp = activeEmployees.find((e) => e.id === t.empleado_id)
-      if (emp && map[emp.tipo]) {
-        map[emp.tipo][t.tipo].push(t)
-      }
-    }
-    return map
-  }, [turnosDelDia, activeEmployees])
-
   const turnosPorTipoSectorYTurno = useMemo(() => {
     const map: Record<string, Record<string, Record<string, Turno[]>>> = {}
     for (const t of turnosDelDia) {
@@ -221,7 +208,7 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
     })
   }, [sectores])
 
-  const tiposPorSector = ['NURSE', 'NURSE_ASSISTANT']
+  const isLoading = createTurnoMutation.isPending || deleteTurnoMutation.isPending
 
   const handleEmployeeClick = useCallback(async (turno: Turno) => {
     if (readonly) return
@@ -246,8 +233,6 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
     )
   }, [employeesByTipo, empleadosAsignadosPorTipo, empleadosConLicencia])
 
-  const isLoading = createTurnoMutation.isPending || deleteTurnoMutation.isPending
-
   function renderCell(
     sector: string,
     tipo: string,
@@ -257,11 +242,8 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
     const isOpen = addingTo?.sector === sector && addingTo?.tipo === tipo && addingTo?.turno === turno
 
     return (
-      <td
-        key={turno}
-        className={`px-3 py-2 border-b align-top ${turnoColors[turno]} relative`}
-      >
-        <div className="flex flex-col gap-1 min-h-[40px]">
+      <td key={turno} className="p-2 align-top border border-[var(--border)]">
+        <div className="flex flex-col gap-1">
           {emps.map((t) => {
             const emp = activeEmployees.find((e) => e.id === t.empleado_id)
             return (
@@ -272,16 +254,20 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
                 onClick={() => handleEmployeeClick(t)}
                 title={
                   readonly
-                    ? `${emp?.apellido}, ${emp?.nombre}`
-                    : `${emp?.apellido}, ${emp?.nombre} - Click para cambiar`
+                    ? fullName(emp)
+                    : `${fullName(emp)} - Click para eliminar`
                 }
-                className={`text-[11px] px-1.5 py-0.5 rounded ${
-                  turnoBadgeColors[t.tipo]
-                } ${
-                  readonly ? 'cursor-default' : 'cursor-pointer hover:opacity-80'
-                } transition-opacity text-left truncate max-w-[130px]`}
+                className={`inline-flex w-full items-center gap-[6px] px-[10px] py-[5px] rounded-[6px] text-[0.78rem] font-[450] bg-[var(--surface)] border border-[var(--border)] transition-all duration-200 ${
+                  readonly ? 'cursor-default' : 'cursor-pointer hover:border-[var(--accent)] hover:shadow-[var(--shadow-sm)] hover:-translate-y-[0.5px]'
+                }`}
               >
-                {emp?.apellido}, {emp?.nombre}
+                <span className="w-[22px] h-[22px] rounded-full bg-[var(--accent-light)] text-[var(--accent-dark)] flex items-center justify-center text-[0.65rem] font-semibold shrink-0">
+                  {initials(emp?.nombre, emp?.apellido)}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-left">{fullName(emp)}</span>
+                <span className="text-[0.62rem] font-[510] text-[var(--muted-foreground)] ml-auto tracking-[0.03em] opacity-65 shrink-0">
+                  {tipoShortLabels[tipo] ?? tipo}
+                </span>
               </button>
             )
           })}
@@ -291,7 +277,7 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
                 type="button"
                 onClick={() => setAddingTo(isOpen ? null : { sector, tipo, turno })}
                 disabled={isLoading}
-                className="text-[11px] w-full py-0.5 rounded border border-dashed border-muted-foreground/30 text-muted-foreground/60 hover:border-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                className="flex w-full items-center justify-center gap-[4px] py-[5px] rounded-[6px] border border-dashed border-[var(--border)] bg-transparent text-[var(--muted-foreground)] text-[0.75rem] cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)]"
               >
                 + Agregar
               </button>
@@ -310,32 +296,43 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-medium whitespace-nowrap">Día:</span>
-        <Select value={String(dia)} onValueChange={(v) => { if (v) setDia(Number(v)) }}>
-          <SelectTrigger className="w-48">
-            <span className="flex-1 text-left">{diaLabels[dia] ?? 'Seleccionar día'}</span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">Lunes</SelectItem>
-            <SelectItem value="2">Martes</SelectItem>
-            <SelectItem value="3">Miércoles</SelectItem>
-            <SelectItem value="4">Jueves</SelectItem>
-            <SelectItem value="5">Viernes</SelectItem>
-            <SelectItem value="6">Sábado</SelectItem>
-            <SelectItem value="7">Domingo</SelectItem>
-          </SelectContent>
-        </Select>
+    <div className="space-y-6">
+      {planif && dateRangeStr && (
+        <p className="text-sm text-[var(--muted-foreground)]">
+          {dateRangeStr} &middot; Planificación: {planif.nombre}
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-[5px]" role="group" aria-label="Selector de día">
+        {[1, 2, 3, 4, 5, 6, 7].map((d) => {
+          const date = weekDates[d - 1]
+          return (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDia(d)}
+              className={`px-4 py-[5px] rounded-full text-[0.78rem] font-[450] border transition-all duration-200 cursor-pointer ${
+                dia === d
+                  ? 'border-[var(--accent)] bg-[var(--accent)] text-white font-[510]'
+                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted-foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+              }`}
+            >
+              {diaShortLabels[d]}{date ? ` ${date.getDate()}` : ''}
+            </button>
+          )
+        })}
       </div>
 
       {empleadosConLicencia.size > 0 && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-red-50 border border-red-200 rounded-md px-3 py-2">
-          <span className="font-medium text-red-700">Empleados con licencia este día:</span>
+        <div className="flex items-center gap-3 text-sm text-[var(--danger)] bg-red-50 border border-red-200 rounded-[var(--radius-sm)] px-4 py-3">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px] shrink-0">
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>Personal con licencia hoy: </span>
           {Array.from(empleadosConLicencia).map((empId) => {
             const emp = activeEmployees.find((e) => e.id === empId)
             return emp ? (
-              <span key={empId} className="inline-flex items-center gap-1 bg-red-100 text-red-800 px-2 py-0.5 rounded">
+              <span key={empId} className="inline-flex px-[10px] py-[3px] rounded-full bg-red-100 text-red-800 text-[0.75rem] font-[510]">
                 {emp.apellido}, {emp.nombre}
               </span>
             ) : null
@@ -343,19 +340,17 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
         </div>
       )}
 
-      <div className="overflow-x-auto pb-4">
+      <div className="overflow-x-auto pb-2">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr>
-              <th className="text-left px-3 py-2 font-medium text-muted-foreground border-b w-48">
+              <th className="text-left px-3 py-2 font-medium text-[var(--muted-foreground)] border-b border-[var(--border)] w-48">
                 Cargo
               </th>
               {turnosOrden.map((turno) => (
-                <th
-                  key={turno}
-                  className={`px-3 py-2 font-medium text-center border-b ${turnoColors[turno]}`}
-                >
-                  {turnoLabels[turno]}
+                <th key={turno} className="px-3 py-2 font-medium text-center border-b border-[var(--border)] text-[var(--fg)]">
+                  <div>{turnoLabels[turno]}</div>
+                  <div className="text-[0.65rem] font-normal text-[var(--muted-foreground)]">{turnoTime[turno]}</div>
                 </th>
               ))}
             </tr>
@@ -363,15 +358,13 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
           <tbody>
             {(() => {
               const tipo = 'SUPERVISOR'
-              const supervisorTurnos = turnosPorTipoYTurno[tipo] ?? {}
-
+              const supervisorTurnos = turnosPorTipoSectorYTurno[tipo]?.[''] ?? {}
+              const totalTipo = (employeesByTipo[tipo] ?? []).length
               return (
                 <tr key={tipo}>
-                  <td className="px-3 py-2 font-medium border-b align-top">
-                    {tipoLabels[tipo] ?? tipo}
-                    <div className="text-[10px] text-muted-foreground font-normal">
-                      {(employeesByTipo[tipo] ?? []).length} empleados
-                    </div>
+                  <td className="px-3 py-2 font-medium border border-[var(--border)] align-top">
+                    {tipoLabels[tipo]}
+                    <div className="text-[0.65rem] font-normal text-[var(--muted-foreground)]">{totalTipo} empleados</div>
                   </td>
                   {turnosOrden.map((turno) =>
                     renderCell('', tipo, turno, supervisorTurnos[turno] ?? [])
@@ -381,21 +374,20 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
             })()}
             {allSectores.flatMap((sec) => [
               <tr key={`sec-${sec}`}>
-                <td className="px-3 py-2 font-medium border-b border-t-2 bg-muted/20" colSpan={5}>
-                  Sector {sec}
+                <td className="px-3 py-2 font-medium border border-[var(--border)] bg-[var(--bg)] text-sm" colSpan={5}>
+                  <span className="inline-block border-b-2 border-[var(--accent)] pb-0.5 text-[0.82rem] font-[510] uppercase tracking-[0.06em]">
+                    {sec}
+                  </span>
                 </td>
               </tr>,
               ...tiposPorSector.map((tipo) => {
                 const sectorTurnos = turnosPorTipoSectorYTurno[tipo]?.[sec] ?? {}
                 const totalTipo = (employeesByTipo[tipo] ?? []).length
-
                 return (
                   <tr key={`${sec}-${tipo}`}>
-                    <td className="px-3 py-2 text-sm border-b align-top pl-6">
-                      {tipoLabels[tipo] ?? tipo}
-                      <div className="text-[10px] text-muted-foreground font-normal">
-                        {totalTipo} empleados
-                      </div>
+                    <td className="px-3 py-2 text-sm border border-[var(--border)] align-top pl-6">
+                      {tipoLabels[tipo]}
+                      <div className="text-[0.65rem] font-normal text-[var(--muted-foreground)]">{totalTipo} empleados</div>
                     </td>
                     {turnosOrden.map((turno) =>
                       renderCell(sec, tipo, turno, sectorTurnos[turno] ?? [])
@@ -406,15 +398,13 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
             ])}
             {(() => {
               const tipo = 'AUXILIAR_SERVICIO'
-              const auxTurnos = turnosPorTipoYTurno[tipo] ?? {}
-
+              const auxTurnos = turnosPorTipoSectorYTurno[tipo]?.[''] ?? {}
+              const totalTipo = (employeesByTipo[tipo] ?? []).length
               return (
                 <tr key={tipo}>
-                  <td className="px-3 py-2 font-medium border-b align-top">
-                    {tipoLabels[tipo] ?? tipo}
-                    <div className="text-[10px] text-muted-foreground font-normal">
-                      {(employeesByTipo[tipo] ?? []).length} empleados
-                    </div>
+                  <td className="px-3 py-2 font-medium border border-[var(--border)] align-top">
+                    {tipoLabels[tipo]}
+                    <div className="text-[0.65rem] font-normal text-[var(--muted-foreground)]">{totalTipo} empleados</div>
                   </td>
                   {turnosOrden.map((turno) =>
                     renderCell('', tipo, turno, auxTurnos[turno] ?? [])
@@ -427,7 +417,7 @@ export function PlanillaDiaria({ planificacionId, readonly }: PlanillaDiariaProp
       </div>
 
       {!readonly && (
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-4 text-xs text-[var(--muted-foreground)]">
           <span>Click en un empleado para eliminar su turno &middot; + Agregar para asignar un nuevo turno</span>
         </div>
       )}

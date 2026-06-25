@@ -60,8 +60,8 @@ export function LeaveRequestForm() {
       })
       toast.success('Solicitud de licencia creada')
       router.push('/leave-requests')
-    } catch (err: any) {
-      toast.error(err?.message || 'Error al crear licencia')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al crear licencia')
     }
   }
 
