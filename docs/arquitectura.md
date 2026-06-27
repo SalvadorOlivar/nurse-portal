@@ -18,8 +18,6 @@ flowchart TB
       intercambioNew["intercambio/new"]
       leaveRequests["leave-requests"]
       leaveRequestsNew["leave-requests/new"]
-      sectores["sectores"]
-      dotacion["dotacion"]
       schedules["schedules"]
       profile["profile"]
     end
@@ -125,8 +123,6 @@ flowchart TB
   intercambioNew --> appShell
   leaveRequests --> appShell
   leaveRequestsNew --> appShell
-  sectores --> appShell
-  dotacion --> appShell
   schedules --> appShell
   profile --> appShell
 

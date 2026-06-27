@@ -28,10 +28,10 @@ const turnoLabels: Record<string, string> = {
 }
 
 const turnoTime: Record<string, string> = {
-  MANANA: '06:00-14:00',
-  TARDE: '14:00-22:00',
-  VESPERTINO: '22:00-06:00',
-  NOCHE: '22:00-06:00',
+  MANANA: '06:00-12:00',
+  TARDE: '12:00-18:00',
+  VESPERTINO: '18:00-00:00',
+  NOCHE: '00:00-06:00',
 }
 
 const tipoOrden = ['SUPERVISOR', 'NURSE', 'NURSE_ASSISTANT', 'AUXILIAR_SERVICIO']

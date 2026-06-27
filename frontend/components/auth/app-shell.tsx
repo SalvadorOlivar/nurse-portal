@@ -4,9 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  Bed,
   CalendarDays,
-  ClipboardList,
   LogOut,
   Repeat,
   Stethoscope,
@@ -24,11 +22,6 @@ const primaryNav = [
   { href: '/leave-requests', label: 'Licencias', icon: Stethoscope },
 ] as const
 
-const configNav = [
-  { href: '/sectores', label: 'Sectores', icon: Bed, roles: ['ADMIN', 'SUPERVISOR'] },
-  { href: '/dotacion', label: 'Dotacion', icon: ClipboardList, roles: ['ADMIN', 'SUPERVISOR'] },
-] as const
-
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -41,7 +34,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const role = user?.role
   const visiblePrimary = primaryNav.filter((item) => !('roles' in item) || (!!role && item.roles.some((allowed) => allowed === role)))
-  const visibleConfig = configNav.filter((item) => !('roles' in item) || (!!role && item.roles.some((allowed) => allowed === role)))
 
   useEffect(() => {
     if (!isPublic && isError) {
@@ -144,14 +136,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </nav>
 
-          <nav className="np-nav-section">
-            <p className="np-nav-label">Configuracion</p>
-            <div className="np-nav-list">
-              {visibleConfig.map((item) => (
-                <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} pathname={pathname} />
-              ))}
-            </div>
-          </nav>
         </div>
       </aside>
 
