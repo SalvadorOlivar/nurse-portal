@@ -118,10 +118,6 @@ export default function ProfilePage() {
               <dd className="font-medium">{tipoLabels[employee.tipo]}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Sector</dt>
-              <dd className="font-medium">{employee.sector}</dd>
-            </div>
-            <div>
               <dt className="text-muted-foreground">Estado</dt>
               <dd>
                 {employee.activo ? (

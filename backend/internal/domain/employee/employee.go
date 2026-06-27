@@ -12,7 +12,6 @@ type Employee struct {
 	Nombre        string
 	Apellido      string
 	Tipo          Type
-	Sector        string
 	HorasMinimas  int
 	HorasMaximas  int
 	PatronTrabajo WorkPattern
@@ -25,7 +24,6 @@ type NewEmployeeParams struct {
 	Nombre       string
 	Apellido     string
 	Tipo         Type
-	Sector       string
 	HorasMinimas int
 	HorasMaximas int
 	WorkPattern  *WorkPattern
@@ -58,7 +56,6 @@ func NewEmployee(params NewEmployeeParams) (*Employee, error) {
 		Nombre:        params.Nombre,
 		Apellido:      params.Apellido,
 		Tipo:          params.Tipo,
-		Sector:        params.Sector,
 		HorasMinimas:  params.HorasMinimas,
 		HorasMaximas:  params.HorasMaximas,
 		PatronTrabajo: wp,
@@ -72,7 +69,6 @@ type UpdateEmployeeParams struct {
 	Nombre       string
 	Apellido     string
 	Tipo         Type
-	Sector       string
 	HorasMinimas int
 	HorasMaximas int
 	WorkPattern  *WorkPattern
@@ -98,7 +94,6 @@ func (e *Employee) Update(params UpdateEmployeeParams) error {
 	e.Nombre = params.Nombre
 	e.Apellido = params.Apellido
 	e.Tipo = params.Tipo
-	e.Sector = params.Sector
 	e.HorasMinimas = params.HorasMinimas
 	e.HorasMaximas = params.HorasMaximas
 	if params.WorkPattern != nil {

@@ -24,7 +24,6 @@ func (h *EmployeeHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Nombre       string `json:"nombre"`
 		Apellido     string `json:"apellido"`
 		Tipo         string `json:"tipo"`
-		Sector       string `json:"sector"`
 		HorasMinimas int    `json:"horas_minimas"`
 		HorasMaximas int    `json:"horas_maximas"`
 		WorkDays     *int   `json:"work_days,omitempty"`
@@ -39,7 +38,6 @@ func (h *EmployeeHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Nombre:       req.Nombre,
 		Apellido:     req.Apellido,
 		Tipo:         req.Tipo,
-		Sector:       req.Sector,
 		HorasMinimas: req.HorasMinimas,
 		HorasMaximas: req.HorasMaximas,
 		WorkDays:     req.WorkDays,
@@ -97,7 +95,6 @@ func (h *EmployeeHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Nombre       string `json:"nombre"`
 		Apellido     string `json:"apellido"`
 		Tipo         string `json:"tipo"`
-		Sector       string `json:"sector"`
 		HorasMinimas int    `json:"horas_minimas"`
 		HorasMaximas int    `json:"horas_maximas"`
 		WorkDays     *int   `json:"work_days,omitempty"`
@@ -113,7 +110,6 @@ func (h *EmployeeHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Nombre:       req.Nombre,
 		Apellido:     req.Apellido,
 		Tipo:         req.Tipo,
-		Sector:       req.Sector,
 		HorasMinimas: req.HorasMinimas,
 		HorasMaximas: req.HorasMaximas,
 		WorkDays:     req.WorkDays,
@@ -142,7 +138,6 @@ type employeeResponse struct {
 	Nombre          string `json:"nombre"`
 	Apellido        string `json:"apellido"`
 	Tipo            string `json:"tipo"`
-	Sector          string `json:"sector"`
 	HorasMinimas    int    `json:"horas_minimas"`
 	HorasMaximas    int    `json:"horas_maximas"`
 	WorkDays        int    `json:"work_days"`
@@ -159,7 +154,6 @@ func toResponse(e *employee.Employee) employeeResponse {
 		Nombre:        e.Nombre,
 		Apellido:      e.Apellido,
 		Tipo:          string(e.Tipo),
-		Sector:        e.Sector,
 		HorasMinimas:  e.HorasMinimas,
 		HorasMaximas:  e.HorasMaximas,
 		WorkDays:      e.PatronTrabajo.WorkDays,

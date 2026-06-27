@@ -23,17 +23,13 @@ export function EmployeeList() {
   const { data: meData } = useMe()
   const canEdit = meData?.user.role === 'ADMIN'
   const [query, setQuery] = useState('')
-  const [sector, setSector] = useState('Todos')
   const [modalOpen, setModalOpen] = useState(false)
 
   const employees = useMemo(() => data?.data ?? [], [data?.data])
   const activeLeaves = leavesData?.data?.filter((leave) => leave.estado === 'APROBADO' && isDateInRange(todayIso(), leave.fecha_inicio, leave.fecha_fin)) ?? []
-  const sectors = useMemo(() => ['Todos', ...Array.from(new Set(employees.map((employee) => employee.sector).filter(Boolean))).sort()], [employees])
-  const filteredEmployees = employees.filter((employee) => {
-    const matchesName = `${employee.nombre} ${employee.apellido}`.toLowerCase().includes(query.toLowerCase())
-    const matchesSector = sector === 'Todos' || employee.sector === sector
-    return matchesName && matchesSector
-  })
+  const filteredEmployees = employees.filter((employee) =>
+    `${employee.nombre} ${employee.apellido}`.toLowerCase().includes(query.toLowerCase())
+  )
 
   if (isLoading) {
     return <div className="np-empty">Cargando empleados...</div>
@@ -47,7 +43,7 @@ export function EmployeeList() {
     <div className="np-page">
       <PageHeader
         title="Empleados"
-        subtitle="Registro operativo del equipo de enfermeria y auxiliares por sector."
+        subtitle="Registro operativo del equipo de enfermeria y auxiliares."
         actions={
           canEdit && (
             <button type="button" className="np-btn np-btn-primary" onClick={() => setModalOpen(true)}>
@@ -81,13 +77,6 @@ export function EmployeeList() {
                 type="search"
               />
             </label>
-            <select className="np-select w-[190px]" value={sector} onChange={(event) => setSector(event.target.value)} aria-label="Filtrar por sector">
-              {sectors.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
         <div className="np-card-body">
@@ -99,7 +88,6 @@ export function EmployeeList() {
                 <thead>
                   <tr>
                     <th>Nombre</th>
-                    <th>Sector</th>
                     <th>Turno preferente</th>
                     <th>Telefono</th>
                     <th>Estado</th>
@@ -121,7 +109,6 @@ export function EmployeeList() {
                             <span className="font-[510]">{fullName(employee)}</span>
                           </div>
                         </td>
-                        <td>{employee.sector || 'Sin sector'}</td>
                         <td>{employee.work_days}x{employee.rest_days}</td>
                         <td>No registrado</td>
                         <td>
@@ -156,7 +143,6 @@ function EmployeeModal({ open, onClose }: { open: boolean; onClose: () => void }
     nombre: '',
     apellido: '',
     tipo: 'NURSE' as EmployeeType,
-    sector: '',
     horas_minimas: 30,
     horas_maximas: 44,
     work_days: 5,
@@ -199,10 +185,6 @@ function EmployeeModal({ open, onClose }: { open: boolean; onClose: () => void }
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
-          </label>
-          <label>
-            <span className="np-label">Sector</span>
-            <input className="np-input" required value={form.sector} onChange={(event) => setForm({ ...form, sector: event.target.value })} />
           </label>
           <label>
             <span className="np-label">Horas minimas</span>

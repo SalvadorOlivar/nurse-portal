@@ -11,7 +11,6 @@ type CreateEmployeeCommand struct {
 	Nombre       string
 	Apellido     string
 	Tipo         string
-	Sector       string
 	HorasMinimas int
 	HorasMaximas int
 	WorkDays     *int
@@ -45,7 +44,6 @@ func (h *CreateEmployeeHandler) Handle(ctx context.Context, cmd CreateEmployeeCo
 		Nombre:       cmd.Nombre,
 		Apellido:     cmd.Apellido,
 		Tipo:         tipo,
-		Sector:       cmd.Sector,
 		HorasMinimas: cmd.HorasMinimas,
 		HorasMaximas: cmd.HorasMaximas,
 		WorkPattern:  wp,

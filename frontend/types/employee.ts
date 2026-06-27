@@ -5,7 +5,6 @@ export interface Employee {
   nombre: string
   apellido: string
   tipo: EmployeeType
-  sector: string
   horas_minimas: number
   horas_maximas: number
   work_days: number
@@ -19,7 +18,6 @@ export interface CreateEmployeePayload {
   nombre: string
   apellido: string
   tipo: EmployeeType
-  sector: string
   horas_minimas: number
   horas_maximas: number
   work_days?: number

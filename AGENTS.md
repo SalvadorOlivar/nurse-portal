@@ -26,10 +26,10 @@ PostgreSQL 16 con migrations goose.
 
 ---
 
-## Regla: Actualizar diagrama de arquitectura
+## Regla: Actualizar de arquitectura
 
 Como paso final de cada tarea:
 
-1. Si hiciste cambios que afecten la estructura del proyecto (nuevos componentes, handlers, servicios, repos, rutas, flujos), actualiza `docs/arquitectura.md`.
+1. Si hiciste cambios que afecten la estructura del proyecto (nuevos componentes, handlers, servicios, repos, rutas, flujos), actualiza `docs/arquitectura.md` y tambien este archivo `AGENTS.md` y su descripcion de la arquitectura.
 2. Mantén sincronizadas ambas versiones (detallada y compacta).
 3. El diagrama usa sintaxis `architecture` de Mermaid. Refleja las capas: Frontend (pages → components → hooks → API) → Backend (handlers → services → CQRS → ports → repos) → DB.

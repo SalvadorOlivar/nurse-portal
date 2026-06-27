@@ -13,7 +13,6 @@ type UpdateEmployeeCommand struct {
 	Nombre       string
 	Apellido     string
 	Tipo         string
-	Sector       string
 	HorasMinimas int
 	HorasMaximas int
 	WorkDays     *int
@@ -52,7 +51,6 @@ func (h *UpdateEmployeeHandler) Handle(ctx context.Context, cmd UpdateEmployeeCo
 		Nombre:       cmd.Nombre,
 		Apellido:     cmd.Apellido,
 		Tipo:         tipo,
-		Sector:       cmd.Sector,
 		HorasMinimas: cmd.HorasMinimas,
 		HorasMaximas: cmd.HorasMaximas,
 		WorkPattern:  wp,

@@ -29,7 +29,6 @@ export function EmployeeForm({ employee }: EmployeeFormProps) {
   const [nombre, setNombre] = useState(employee?.nombre ?? '')
   const [apellido, setApellido] = useState(employee?.apellido ?? '')
 const [tipo, setTipo] = useState<EmployeeType>(employee?.tipo ?? 'NURSE')
-const [sector, setSector] = useState(employee?.sector ?? '')
 const [horasMinimas, setHorasMinimas] = useState(employee?.horas_minimas ?? 120)
   const [horasMaximas, setHorasMaximas] = useState(employee?.horas_maximas ?? 200)
   const [workDays, setWorkDays] = useState(employee?.work_days ?? 4)
@@ -44,7 +43,6 @@ const [horasMinimas, setHorasMinimas] = useState(employee?.horas_minimas ?? 120)
       nombre,
       apellido,
       tipo,
-      sector,
       horas_minimas: horasMinimas,
       horas_maximas: horasMaximas,
       work_days: isEditing ? workDays : (workDays !== 4 ? workDays : undefined),
@@ -98,7 +96,7 @@ const [horasMinimas, setHorasMinimas] = useState(employee?.horas_minimas ?? 120)
 
       <div className="space-y-2">
         <Label htmlFor="tipo">Tipo</Label>
-        <Select value={tipo} onValueChange={(v) => { if (v) { setTipo(v as EmployeeType); setSector('') } }}>
+        <Select value={tipo} onValueChange={(v) => { if (v) setTipo(v as EmployeeType) }}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -107,20 +105,6 @@ const [horasMinimas, setHorasMinimas] = useState(employee?.horas_minimas ?? 120)
             <SelectItem value="NURSE">Licenciada/o en Enfermería</SelectItem>
             <SelectItem value="NURSE_ASSISTANT">Enfermera/o</SelectItem>
             <SelectItem value="AUXILIAR_SERVICIO">Auxiliar de Servicio</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="sector">Sector <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-        <Select value={sector} onValueChange={(v) => { if (v) setSector(v) }}>
-          <SelectTrigger>
-            <SelectValue placeholder="Sin sector específico" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1-8">Sector 1-8</SelectItem>
-            <SelectItem value="9-14">Sector 9-14</SelectItem>
-            <SelectItem value="15-20">Sector 15-20</SelectItem>
           </SelectContent>
         </Select>
       </div>
