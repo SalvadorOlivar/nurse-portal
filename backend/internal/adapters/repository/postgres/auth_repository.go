@@ -67,19 +67,6 @@ func (r *AuthRepository) DeleteSession(ctx context.Context, tokenHash string) er
 	return err
 }
 
-func (r *AuthRepository) EnsureAdmin(ctx context.Context, username, passwordHash string) error {
-	_, err := r.pool.Exec(ctx, `
-		INSERT INTO auth_users (username, password_hash, role)
-		VALUES ($1, $2, 'ADMIN')
-		ON CONFLICT (username) DO UPDATE
-		SET password_hash = EXCLUDED.password_hash,
-		    role = 'ADMIN',
-		    employee_id = NULL,
-		    updated_at = NOW()
-	`, username, passwordHash)
-	return err
-}
-
 func (r *AuthRepository) CreateEmployeeUser(ctx context.Context, username string, role auth.Role, employeeID string, passwordHash string) error {
 	_, err := r.pool.Exec(ctx, `
 		INSERT INTO auth_users (username, role, employee_id, password_hash, must_change_password)

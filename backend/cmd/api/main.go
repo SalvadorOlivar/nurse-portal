@@ -3,120 +3,72 @@ package main
 import (
 	"context"
 	"log/slog"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/pressly/goose/v3"
+	"github.com/joho/godotenv"
+	db "github.com/tuusuario/nurse-portal/internal/adapters/database/postgres"
 	nursehttp "github.com/tuusuario/nurse-portal/internal/adapters/http"
-	"github.com/tuusuario/nurse-portal/internal/adapters/repository/postgres"
+	repo "github.com/tuusuario/nurse-portal/internal/adapters/repository/postgres"
 	"github.com/tuusuario/nurse-portal/internal/application/services"
+	"github.com/tuusuario/nurse-portal/internal/server"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	// dbURL := getEnv("DATABASE_URL", "postgres://nurse:nurse_dev@localhost:5432/nurse_portal?sslmode=disable")
-	dbURL := getEnv("DATABASE_URL", "postgresql://postgres:vUbnXYya9Wdjcb1A@db.zeiucxhkmxngysemqyrn.supabase.co:5432/postgres")
-	port := getEnv("PORT", "8080")
+	err := godotenv.Load(".env")
+	if err != nil {
+		slog.Error("failed to load .env", "error", err)
+	    os.Exit(1)
+	}
+
+	dbURL := os.Getenv("DATABASE_URL")
+	port := os.Getenv("PORT")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	pool, err := pgxpool.New(ctx, dbURL)
+	pool, err := db.NewConnection(ctx, dbURL)
 	if err != nil {
-		slog.Error("failed to connect to database", "error", err)
-		os.Exit(1)
+		slog.Error("failed to create new connection to database", "error", err)
 	}
-	defer pool.Close()
 
-	if err := runMigrations(ctx, dbURL); err != nil {
+	err = db.RunMigrations(ctx, dbURL)
+	if err != nil {
 		slog.Error("failed to run migrations", "error", err)
 		os.Exit(1)
 	}
-
+    
 	slog.Info("migrations applied successfully")
 
-	authRepo := postgres.NewAuthRepository(pool)
+	authRepo := repo.NewAuthRepository(pool)
 	authSvc := services.NewAuthService(authRepo)
-	if err := authSvc.EnsureAdmin(ctx, os.Getenv("ADMIN_USERNAME"), os.Getenv("ADMIN_PASSWORD")); err != nil {
-		slog.Error("failed to ensure admin user", "error", err)
-		os.Exit(1)
-	}
 	authHandler := nursehttp.NewAuthHandler(authSvc)
 	authMiddleware := nursehttp.NewAuthMiddleware(authSvc)
 
-	employeeRepo := postgres.NewEmployeeRepository(pool)
+	employeeRepo := repo.NewEmployeeRepository(pool)
 	employeeSvc := services.NewEmployeeService(employeeRepo, authSvc)
 	employeeHandler := nursehttp.NewEmployeeHandler(employeeSvc)
 
-	planifRepo := postgres.NewPlanificacionRepository(pool)
-	turnoRepo := postgres.NewTurnoRepository(pool)
-	dotacionRepo := postgres.NewDotacionRepository(pool)
-	leaveRepo := postgres.NewLeaveRequestRepository(pool)
-	compRepo := postgres.NewCompensatoryDayRepository(pool)
+	planifRepo := repo.NewPlanificacionRepository(pool)
+	turnoRepo := repo.NewTurnoRepository(pool)
+	dotacionRepo := repo.NewDotacionRepository(pool)
+	leaveRepo := repo.NewLeaveRequestRepository(pool)
+	compRepo := repo.NewCompensatoryDayRepository(pool)
 	planifSvc := services.NewPlanificacionService(planifRepo, turnoRepo, dotacionRepo, dotacionRepo, employeeRepo, leaveRepo, compRepo)
 	planifHandler := nursehttp.NewPlanificacionHandler(planifSvc, employeeSvc)
 
 	ausenciaSvc := services.NewAusenciaService(leaveRepo, compRepo)
 	ausenciaHandler := nursehttp.NewAusenciaHandler(ausenciaSvc)
 
-	intercambioRepo := postgres.NewIntercambioRepository(pool)
+	intercambioRepo := repo.NewIntercambioRepository(pool)
 	intercambioSvc := services.NewIntercambioService(intercambioRepo, turnoRepo, planifRepo, leaveRepo)
 	intercambioHandler := nursehttp.NewIntercambioHandler(intercambioSvc)
 
 	router := nursehttp.NewRouter(authHandler, authMiddleware, employeeHandler, planifHandler, ausenciaHandler, intercambioHandler)
 
-	server := &http.Server{
-		Addr:         ":" + port,
-		Handler:      router,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	go func() {
-		slog.Info("server starting", "port", port)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	slog.Info("shutting down server...")
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer shutdownCancel()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		slog.Error("server forced to shutdown", "error", err)
-		os.Exit(1)
-	}
-
-	slog.Info("server stopped")
-}
-
-func runMigrations(ctx context.Context, dbURL string) error {
-	db, err := goose.OpenDBWithDriver("postgres", dbURL)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	return goose.UpContext(ctx, db, "migrations")
-}
-
-func getEnv(key, fallback string) string {
-	if val := os.Getenv(key); val != "" {
-		return val
-	}
-	return fallback
+	server.Start(router, port)
 }

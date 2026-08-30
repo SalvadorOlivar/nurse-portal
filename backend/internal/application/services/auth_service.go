@@ -116,20 +116,6 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 	return s.repo.DeleteSession(ctx, hashToken(token))
 }
 
-func (s *AuthService) EnsureAdmin(ctx context.Context, username, password string) error {
-	username = NormalizeUsername(username)
-	if username == "" || password == "" {
-		return nil
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	return s.repo.EnsureAdmin(ctx, username, string(hash))
-}
-
 func (s *AuthService) CreateEmployeeAccount(ctx context.Context, emp *employee.Employee) (string, error) {
 	username := UsernameForEmployee(emp.Nombre, emp.Apellido)
 	role := auth.RoleEmployee

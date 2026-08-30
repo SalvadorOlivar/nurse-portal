@@ -1,7 +1,7 @@
 .PHONY: run build test test-int db-up db-down
 
 run:
-	go run ./cmd/api
+	go build -o bin/api ./cmd/api && go run ./cmd/api
 
 build:
 	go build -o bin/api ./cmd/api
