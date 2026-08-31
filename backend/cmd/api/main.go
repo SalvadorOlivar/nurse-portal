@@ -48,10 +48,12 @@ func main() {
 	authSvc := services.NewAuthService(authRepo)
 	authHandler := nursehttp.NewAuthHandler(authSvc)
 	authMiddleware := nursehttp.NewAuthMiddleware(authSvc)
+	authRoutes := nursehttp.NewAuthRoutes(authHandler, authMiddleware)
 
 	employeeRepo := repo.NewEmployeeRepository(pool)
 	employeeSvc := services.NewEmployeeService(employeeRepo, authSvc)
 	employeeHandler := nursehttp.NewEmployeeHandler(employeeSvc)
+	employeeRoutes := nursehttp.NewEmployeeRoutes(employeeHandler, authMiddleware)
 
 	planifRepo := repo.NewPlanificacionRepository(pool)
 	turnoRepo := repo.NewTurnoRepository(pool)
@@ -60,15 +62,18 @@ func main() {
 	compRepo := repo.NewCompensatoryDayRepository(pool)
 	planifSvc := services.NewPlanificacionService(planifRepo, turnoRepo, dotacionRepo, dotacionRepo, employeeRepo, leaveRepo, compRepo)
 	planifHandler := nursehttp.NewPlanificacionHandler(planifSvc, employeeSvc)
+	planifRoutes := nursehttp.NewPlanificacionRoutes(planifHandler, authMiddleware)
 
 	ausenciaSvc := services.NewAusenciaService(leaveRepo, compRepo)
 	ausenciaHandler := nursehttp.NewAusenciaHandler(ausenciaSvc)
+	ausenciaRoutes := nursehttp.NewAusenciasRoutes(ausenciaHandler, authMiddleware)
 
 	intercambioRepo := repo.NewIntercambioRepository(pool)
 	intercambioSvc := services.NewIntercambioService(intercambioRepo, turnoRepo, planifRepo, leaveRepo)
 	intercambioHandler := nursehttp.NewIntercambioHandler(intercambioSvc)
+	intercambioRoutes := nursehttp.NewIntercambioRoutes(intercambioHandler, authMiddleware)
 
-	router := nursehttp.NewRouter(authHandler, authMiddleware, employeeHandler, planifHandler, ausenciaHandler, intercambioHandler)
+	router := nursehttp.NewRouter(employeeRoutes, authRoutes, planifRoutes, ausenciaRoutes, intercambioRoutes)
 
 	server.Start(router, port)
 }
