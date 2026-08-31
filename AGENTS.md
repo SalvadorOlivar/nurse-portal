@@ -13,7 +13,10 @@
 
 ## Backend (Go, hexagonal + CQRS)
 
-- `internal/adapters/http/` — Handlers REST + middleware auth (chi router)
+- `internal/adapters/http/router.go` — Router `chi`, middleware globales, prefijo `/api/v1` y contrato `RouteRegistrar`
+- `internal/adapters/http/*_routes.go` — Registro modular de rutas por feature (auth, employees, planificaciones, ausencia, intercambio), conectado a handlers y middleware auth
+- `internal/adapters/http/*_handler.go` — Handlers REST por feature
+- `cmd/api/main.go` — Composition root: construye repositorios, servicios, handlers y registradores de rutas
 - `internal/application/services/` — 5 service facades (Auth, Employee, Planificacion, Ausencia, Intercambio)
 - `internal/application/commands/` — CQRS command handlers (employee, planificacion, turno, leave, intercambio, compensatory)
 - `internal/application/queries/` — CQRS query handlers (planificacion, leave, intercambio, compensatory)

@@ -54,6 +54,11 @@ flowchart TB
   subgraph Backend["Backend - Go Hexagonal"]
     subgraph HTTPAdapter["HTTP Adapter"]
       router["chi Router /api/v1"]
+      authRoutes["Auth Route Registrar"]
+      employeeRoutes["Employee Route Registrar"]
+      planifRoutes["Planificacion Route Registrar"]
+      ausenciaRoutes["Ausencia Route Registrar"]
+      intercambioRoutes["Intercambio Route Registrar"]
       authMiddleware["Auth Middleware"]
       authHandler["Auth Handler"]
       employeeHandler["Employee Handler"]
@@ -156,13 +161,23 @@ flowchart TB
   intercambioComponents --> Types
 
   apiClient --> router
-  router --> authMiddleware
+  router --> authRoutes
+  router --> employeeRoutes
+  router --> planifRoutes
+  router --> ausenciaRoutes
+  router --> intercambioRoutes
 
-  router --> authHandler
-  router --> employeeHandler
-  router --> planifHandler
-  router --> ausenciaHandler
-  router --> intercambioHandler
+  authRoutes --> authMiddleware
+  employeeRoutes --> authMiddleware
+  planifRoutes --> authMiddleware
+  ausenciaRoutes --> authMiddleware
+  intercambioRoutes --> authMiddleware
+
+  authRoutes --> authHandler
+  employeeRoutes --> employeeHandler
+  planifRoutes --> planifHandler
+  ausenciaRoutes --> ausenciaHandler
+  intercambioRoutes --> intercambioHandler
 
   authMiddleware --> authService
   authHandler --> authService
@@ -235,6 +250,8 @@ flowchart TB
   end
 
   subgraph Backend["Backend"]
+    router["chi Router /api/v1"]
+    routeRegistrars["Route Registrars"]
     handlers["HTTP Handlers"]
     middleware["Auth Middleware"]
 
@@ -260,9 +277,11 @@ flowchart TB
   components --> hooks
   components --> types
   hooks --> apiClient
-  apiClient --> handlers
+  apiClient --> router
+  router --> routeRegistrars
+  routeRegistrars --> middleware
+  routeRegistrars --> handlers
 
-  handlers --> middleware
   handlers --> services
 
   services --> cmds
@@ -279,6 +298,12 @@ flowchart TB
 ```
 
 ## Notas de implementación
+
+### Backend HTTP — Registro modular de rutas
+- `router.go` configura el router `chi`, los middleware globales y el prefijo `/api/v1`.
+- `RouteRegistrar` define el contrato `RegisterRoutes(chi.Router)` usado para incorporar módulos HTTP sin ampliar la firma de `NewRouter`.
+- Cada módulo (`auth`, `employees`, `planificaciones`, `ausencia` e `intercambio`) encapsula el registro de sus endpoints, su handler y el middleware de autenticación/autorización correspondiente en un archivo `*_routes.go`.
+- `cmd/api/main.go` actúa como composition root: construye repositorios, servicios, handlers y registradores, y entrega estos últimos a `NewRouter`.
 
 ### Planificaciones — Listado agrupado
 - `PlanificacionService.List()` auto-cierra (`PUBLICADO → CERRADO`) planificaciones cuya semana ya venció antes de retornar la lista.
